@@ -1,3 +1,14 @@
+/*
+ * @Description: 
+ * @Version: 
+ * @Autor: tangwc
+ * @Date: 2023-07-27 08:39:33
+ * @LastEditors: tangwc
+ * @LastEditTime: 2023-07-27 22:56:09
+ * @FilePath: \2.Firmware\Core\src\atimer.c
+ * 
+ *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
+ */
 #include "cw32f030_atim.h"
 #include "cw32f030_gpio.h"
 #include "cw32f030_rcc.h"
@@ -46,8 +57,8 @@ void ATIMER_init(void)
     ATIM_InitStruct.CounterDirection = ATIM_COUNTING_UP;        // 向上计数
     ATIM_InitStruct.CounterOPMode = ATIM_OP_MODE_REPETITIVE;    // 重复计数
     ATIM_InitStruct.OverFlowMask = DISABLE;
-    ATIM_InitStruct.Prescaler = ATIM_Prescaler_DIV8; // 8分频 1MHZ
-    ATIM_InitStruct.ReloadValue = 9999;              // 溢出周期 1khz
+    ATIM_InitStruct.Prescaler = ATIM_Prescaler_DIV64; // 主频64MHZ 64分频 1MHZ
+    ATIM_InitStruct.ReloadValue = 999;              // 溢出周期 1khz
     ATIM_InitStruct.RepetitionCounter = 0;
     ATIM_InitStruct.UnderFlowMask = DISABLE;
 
@@ -63,8 +74,7 @@ void ATIMER_init(void)
 
     ATIM_ITConfig(ATIM_CR_IT_OVE, ENABLE);
     ATIM_CH1Config(ATIM_CHxB_CIE, ENABLE);
-    ATIM_SetCompare1B(5000);
-    ATIM_PWMOutputConfig(OCREFA_TYPE_SINGLE, OUTPUT_TYPE_ALONE, -1);
+    ATIM_SetCompare1B(0);
     ATIM_CtrlPWMOutputs(ENABLE);
     ATIM_Cmd(ENABLE);
 

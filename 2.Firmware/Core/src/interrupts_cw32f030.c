@@ -252,10 +252,29 @@ void ADC_IRQHandler(void)
  */
 void ATIM_IRQHandler(void)
 {
+    static uint16_t duration = 0;
+    static uint8_t flag = 1;
     /* USER CODE BEGIN */
     if (ATIM_GetITStatus(ATIM_IT_OVF))
     {
         ATIM_ClearITPendingBit(ATIM_IT_OVF);
+        if(flag)
+        {
+            duration++;
+            if(duration >= 1000)
+            {
+                flag = 0;
+            }
+        }
+        else
+        {
+            duration--;
+            if(duration == 0)
+            {
+                flag = 1;
+            }
+        }
+        ATIM_SetCompare1B(duration);
     }
 
     if (ATIM_GetITStatus(ATIM_IT_C1BF))
