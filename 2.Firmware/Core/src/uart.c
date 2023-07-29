@@ -52,6 +52,13 @@ void UART1_Iint(void)
 
 }
 
+void UART1_IRQHandlerCallBack(void)
+{
+    if(USART_GetITStatus(CW_UART1, USART_IT_RC) != RESET)
+    { 
+        USART_ClearITPendingBit(CW_UART1, USART_IT_RC); 
+    }
+}
 /**
  * @brief Retargets the C library printf function to the USART.
  *

@@ -4,6 +4,6 @@
 
 void ATIMER_init(void);
 
-
+void ATIM_IRQHandlerCallBack(void);
 
 #endif /* __ATIMER_H */

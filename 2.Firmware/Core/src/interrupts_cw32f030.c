@@ -19,8 +19,10 @@
 #include "interrupts_cw32f030.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "cw32f030_uart.h"
-#include "cw32f030_atim.h"
+#include "atimer.h"
+#include "uart.h"
+#include "adc.h"
+#include "gpio.h"
 /* USER CODE END Includes */
 
 
@@ -183,7 +185,7 @@ void GPIOA_IRQHandler(void)
 void GPIOB_IRQHandler(void)
 {
     /* USER CODE BEGIN */
-
+    GPIOB_IRQHandlerCallBack();
     /* USER CODE END */
 }
 
@@ -243,7 +245,7 @@ void DMACH45_IRQHandler(void)
 void ADC_IRQHandler(void)
 {
     /* USER CODE BEGIN */
-
+    ADC_IRQHandlerCallBack();
     /* USER CODE END */
 }
 
@@ -252,35 +254,8 @@ void ADC_IRQHandler(void)
  */
 void ATIM_IRQHandler(void)
 {
-    static uint16_t duration = 0;
-    static uint8_t flag = 1;
     /* USER CODE BEGIN */
-    if (ATIM_GetITStatus(ATIM_IT_OVF))
-    {
-        ATIM_ClearITPendingBit(ATIM_IT_OVF);
-        if(flag)
-        {
-            duration++;
-            if(duration >= 1000)
-            {
-                flag = 0;
-            }
-        }
-        else
-        {
-            duration--;
-            if(duration == 0)
-            {
-                flag = 1;
-            }
-        }
-        ATIM_SetCompare1B(duration);
-    }
-
-    if (ATIM_GetITStatus(ATIM_IT_C1BF))
-    {
-        ATIM_ClearITPendingBit(ATIM_IT_C1BF);
-    }
+    ATIM_IRQHandlerCallBack();
     /* USER CODE END */
 }
 
@@ -420,10 +395,7 @@ void SPI2_IRQHandler(void)
 void UART1_IRQHandler(void)
 {
     /* USER CODE BEGIN */
-    if(USART_GetITStatus(CW_UART1, USART_IT_RC) != RESET)
-    { 
-        USART_ClearITPendingBit(CW_UART1, USART_IT_RC); 
-    }
+    UART1_IRQHandlerCallBack();
     /* USER CODE END */
 }
 

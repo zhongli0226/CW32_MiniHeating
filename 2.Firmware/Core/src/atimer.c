@@ -79,4 +79,41 @@ void ATIMER_init(void)
     ATIM_Cmd(ENABLE);
 
     elog_i(TAG,"ATIM is running.");
+    elog_i(TAG,"pwm up!");
+}
+
+
+void ATIM_IRQHandlerCallBack(void)
+{
+    static uint16_t duration = 0;
+    static uint8_t flag = 1;
+
+    if (ATIM_GetITStatus(ATIM_IT_OVF))
+    {
+        ATIM_ClearITPendingBit(ATIM_IT_OVF);
+        if(flag)
+        {
+            duration++;
+            if(duration >= 1000)
+            {
+                flag = 0;
+                elog_i(TAG,"pwm down!");
+            }
+        }
+        else
+        {
+            duration--;
+            if(duration == 0)
+            {
+                flag = 1;
+                elog_i(TAG,"pwm up!");
+            }
+        }
+        ATIM_SetCompare1B(duration);
+    }
+
+    if (ATIM_GetITStatus(ATIM_IT_C1BF))
+    {
+        ATIM_ClearITPendingBit(ATIM_IT_C1BF);
+    }
 }

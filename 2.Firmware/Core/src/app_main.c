@@ -1,9 +1,23 @@
+/*
+ * @Description: 
+ * @Version: 
+ * @Autor: tangwc
+ * @Date: 2023-07-28 13:46:14
+ * @LastEditors: tangwc
+ * @LastEditTime: 2023-07-29 14:55:25
+ * @FilePath: \2.Firmware\Core\src\app_main.c
+ * 
+ *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
+ */
 #include "app_main.h"
 #include "cw32f030_gpio.h"
 #include "cw32f030_rcc.h"
+#include "cw32f030_adc.h"
 
 #include "uart.h"
 #include "atimer.h"
+#include "adc.h"
+#include "gpio.h"
 #include "elog.h"
 
 #define TAG "app_main"
@@ -28,10 +42,13 @@ int main(void)
     RCC_Configuration();
     UART1_Iint();
     elog_system_init();
+    GPIO_init();
     ATIMER_init();
+    ADC_init();
     while (1)
     {
         delay1ms(1000);
+        ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
     }
     return 0;
 }
