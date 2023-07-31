@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-28 13:46:14
  * @LastEditors: tangwc
- * @LastEditTime: 2023-07-29 14:55:25
+ * @LastEditTime: 2023-07-31 23:23:33
  * @FilePath: \2.Firmware\Core\src\app_main.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -22,6 +22,22 @@
 
 #define TAG "app_main"
 
+
+typedef struct
+{
+    char szVersion[32];    // 软件版本
+    char szBuildDate[32];  // 程序编译日期
+    char szBuildTime[32];  // 程序编译时间
+}AppInfo_t;
+
+
+const AppInfo_t sg_tAppInfo =
+{
+    "MiniHeating_V0.1.0",
+    __DATE__,
+    __TIME__,
+};
+
 void elog_system_init(void)
 {
     /*init 初始化*/
@@ -35,6 +51,11 @@ void elog_system_init(void)
     elog_set_fmt(ELOG_LVL_VERBOSE, ELOG_FMT_LVL | ELOG_FMT_TAG);
     /*elog开始*/
     elog_start();
+
+    /*打印版本信息*/
+    elog_i(TAG,"Version  : %s",sg_tAppInfo.szVersion);
+    elog_i(TAG,"buildDate  : %s",sg_tAppInfo.szBuildDate);
+    elog_i(TAG,"buildTime  : %s",sg_tAppInfo.szBuildTime);
 }
 
 int main(void)
