@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-28 13:46:14
  * @LastEditors: tangwc
- * @LastEditTime: 2023-07-31 23:23:33
+ * @LastEditTime: 2023-08-03 21:40:46
  * @FilePath: \2.Firmware\Core\src\app_main.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -17,7 +17,9 @@
 #include "uart.h"
 #include "atimer.h"
 #include "adc.h"
-#include "gpio.h"
+#include "oled.h"
+#include "ec11.h"
+#include "btimer.h"
 #include "elog.h"
 
 #define TAG "app_main"
@@ -38,7 +40,7 @@ const AppInfo_t sg_tAppInfo =
     __TIME__,
 };
 
-void elog_system_init(void)
+static void elog_system_init(void)
 {
     /*init 初始化*/
     elog_init();
@@ -58,18 +60,32 @@ void elog_system_init(void)
     elog_i(TAG,"buildTime  : %s",sg_tAppInfo.szBuildTime);
 }
 
-int main(void)
-{
+static void bsp_init(void)
+{   
+    // 初始化外部高速晶振 主频64mhz
     RCC_Configuration();
+    // 串口log 初始化
     UART1_Iint();
     elog_system_init();
-    GPIO_init();
+    // pwm外设 初始化
     ATIMER_init();
+    // 定时器 初始化
+    BTIMER_init();
+    // adc 初始化
     ADC_init();
+    // ec11 初始化
+    EC11_Init();
+    // oled 初始化
+    OLED_Init();
+}
+
+int main(void)
+{
+    bsp_init();
     while (1)
     {
         delay1ms(1000);
-        ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
+        // ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
     }
     return 0;
 }

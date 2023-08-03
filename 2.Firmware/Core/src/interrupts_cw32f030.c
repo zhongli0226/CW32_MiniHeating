@@ -1,55 +1,53 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    interrupts.c
-  * @brief   Interrupt Service Routines.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2021 CW.
-  * All rights reserved.</center></h2>
-  *
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    interrupts.c
+ * @brief   Interrupt Service Routines.
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2021 CW.
+ * All rights reserved.</center></h2>
+ *
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
 #include "app_main.h"
 #include "interrupts_cw32f030.h"
+#include "cw32f030_btim.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "atimer.h"
 #include "uart.h"
 #include "adc.h"
-#include "gpio.h"
+#include "ec11.h"
+#include "multi_button.h"
+#include "elog.h"
 /* USER CODE END Includes */
-
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
 /* USER CODE END TD */
 
-
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define TAG "IRQ"
 /* USER CODE END PD */
-
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 /* USER CODE END PM */
 
-
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 /* USER CODE END PV */
 
-
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
-
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
@@ -59,13 +57,12 @@
 /* USER CODE BEGIN EV */
 /* USER CODE END EV */
 
-
 /******************************************************************************/
 /*           Cortex-M0P Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
-  * @brief This function handles Non maskable interrupt.
-  */
+ * @brief This function handles Non maskable interrupt.
+ */
 void NMI_Handler(void)
 {
     /* USER CODE BEGIN NonMaskableInt_IRQn */
@@ -74,12 +71,12 @@ void NMI_Handler(void)
 }
 
 /**
-  * @brief This function handles Hard fault interrupt.
-  */
+ * @brief This function handles Hard fault interrupt.
+ */
 void HardFault_Handler(void)
 {
     /* USER CODE BEGIN HardFault_IRQn */
-
+    elog_e(TAG, "HardFault Handler!");
     /* USER CODE END HardFault_IRQn */
     while (1)
     {
@@ -89,10 +86,9 @@ void HardFault_Handler(void)
     }
 }
 
-
 /**
-  * @brief This function handles System service call via SWI instruction.
-  */
+ * @brief This function handles System service call via SWI instruction.
+ */
 void SVC_Handler(void)
 {
     /* USER CODE BEGIN SVCall_IRQn */
@@ -100,17 +96,15 @@ void SVC_Handler(void)
     /* USER CODE END SVCall_IRQn */
 }
 
-
 /**
-  * @brief This function handles Pendable request for system service.
-  */
+ * @brief This function handles Pendable request for system service.
+ */
 void PendSV_Handler(void)
 {
     /* USER CODE BEGIN PendSV_IRQn */
 
     /* USER CODE END PendSV_IRQn */
 }
-
 
 /******************************************************************************/
 /* CW030 Peripheral Interrupt Handlers                                        */
@@ -185,7 +179,7 @@ void GPIOA_IRQHandler(void)
 void GPIOB_IRQHandler(void)
 {
     /* USER CODE BEGIN */
-    GPIOB_IRQHandlerCallBack();
+    EC11_HandlerCallBack();
     /* USER CODE END */
 }
 
@@ -325,7 +319,12 @@ void GTIM4_IRQHandler(void)
 void BTIM1_IRQHandler(void)
 {
     /* USER CODE BEGIN */
-
+    if (BTIM_GetITStatus(CW_BTIM1, BTIM_IT_OV))
+    {
+        //处理按键信号
+        button_ticks();
+        BTIM_ClearITPendingBit(CW_BTIM1, BTIM_IT_OV);
+    }
     /* USER CODE END */
 }
 
@@ -438,8 +437,6 @@ void FAULT_IRQHandler(void)
 
     /* USER CODE END */
 }
-
-
 
 /* USER CODE BEGIN 1 */
 

@@ -5,5 +5,10 @@
 C_SOURCES += $(wildcard $(User_DIR)/easylogger/src/*.c)
 C_SOURCES += $(wildcard $(User_DIR)/easylogger/port/*.c)
 
+C_SOURCES += $(wildcard $(User_DIR)/oled/*.c)
+
+C_SOURCES += $(wildcard $(User_DIR)/EC11/*.c)
 # 向 C_INCLUDES 中添加头文件路径
 C_INCLUDES += -I$(User_DIR)/easylogger/inc
+C_INCLUDES += -I$(User_DIR)/oled
+C_INCLUDES += -I$(User_DIR)/EC11

@@ -15,6 +15,13 @@
         "cw32f030_gpio.h": "c",
         "interrupts_cw32f030.h": "c",
         "cw32f030_adc.h": "c",
-        "adc.h": "c"
+        "adc.h": "c",
+        "string.h": "c",
+        "oledfont.h": "c",
+        "gpio.h": "c",
+        "elog.h": "c",
+        "ec11.h": "c",
+        "multi_button.h": "c",
+        "cw32f030_btim.h": "c"
     }
 }
