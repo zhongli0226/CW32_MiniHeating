@@ -128,4 +128,11 @@ void GUI_ShowString(uint8_t x, uint8_t y, const uint8_t *p, uint8_t size, uint8_
  */
 void GUI_ShowNum(uint8_t x, uint8_t y, uint32_t num, uint8_t len, uint8_t size, uint8_t mode);
 
+/**
+ * @description: 初始logo过场动画
+ * @return {*} 0：动画运行中，1：动画运行完成 
+ */
+uint8_t Transitions_logo(void);
+
+
 #endif

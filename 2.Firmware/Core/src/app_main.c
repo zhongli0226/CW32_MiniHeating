@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-28 13:46:14
  * @LastEditors: tangwc
- * @LastEditTime: 2023-08-03 21:40:46
+ * @LastEditTime: 2023-08-05 12:58:38
  * @FilePath: \2.Firmware\Core\src\app_main.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -82,8 +82,10 @@ static void bsp_init(void)
 int main(void)
 {
     bsp_init();
+    while (Transitions_logo() == 0);
     while (1)
     {
+        // OLED_Display();
         delay1ms(1000);
         // ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
     }

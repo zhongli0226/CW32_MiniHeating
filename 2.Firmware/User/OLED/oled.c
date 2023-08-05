@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "oled.h"
 #include "oledfont.h"
 
@@ -6,7 +7,6 @@
 #include "cw32f030_rcc.h"
 #include "system_cw32f030.h"
 #include "elog.h"
-
 
 #define TAG "OLED"
 
@@ -33,11 +33,9 @@
 #define OLED_CS_Clr GPIO_WritePin(CW_GPIOB, OLED_CS_GPIO, GPIO_Pin_RESET)
 #define OLED_CS_Set GPIO_WritePin(CW_GPIOB, OLED_CS_GPIO, GPIO_Pin_SET)
 
-
 //-------------写命令和数据定义-------------------
-#define OLED_CMD 0  //写命令
-#define OLED_DATA 1 //写数据
-
+#define OLED_CMD 0  // 写命令
+#define OLED_DATA 1 // 写数据
 
 //--------------OLED参数定义---------------------
 #define PAGE_SIZE 8
@@ -59,7 +57,7 @@ static void OLED_GPIO_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 
-    // 使能GPIOB的配置时钟  
+    // 使能GPIOB的配置时钟
     __RCC_GPIOB_CLK_ENABLE();
 
     GPIO_InitStruct.IT = GPIO_IT_NONE;
@@ -68,7 +66,7 @@ static void OLED_GPIO_Init(void)
     GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
     GPIO_Init(CW_GPIOB, &GPIO_InitStruct);
 
-    elog_i(TAG,"OLED GPIO Init!");
+    elog_i(TAG, "OLED GPIO Init!");
 }
 
 /**
@@ -83,14 +81,14 @@ static void SPI_WriteByte(uint8_t Data)
     {
         if (Data & 0x80)
         {
-            OLED_MOSI_SET; //写数据1
+            OLED_MOSI_SET; // 写数据1
         }
         else
         {
-            OLED_MOSI_CLR; //写数据0
+            OLED_MOSI_CLR; // 写数据0
         }
-        OLED_CLK_CLR; //将时钟拉低拉高
-        OLED_CLK_SET; //发送1bit数据
+        OLED_CLK_CLR; // 将时钟拉低拉高
+        OLED_CLK_SET; // 发送1bit数据
         Data <<= 1;
     }
 }
@@ -122,9 +120,9 @@ static void OLED_WR_Byte(uint8_t dat, uint8_t cmd)
  */
 void OLED_Display_On(void)
 {
-    OLED_WR_Byte(0X8D, OLED_CMD); //SET DCDC命令
-    OLED_WR_Byte(0X14, OLED_CMD); //DCDC ON
-    OLED_WR_Byte(0XAF, OLED_CMD); //DISPLAY ON
+    OLED_WR_Byte(0X8D, OLED_CMD); // SET DCDC命令
+    OLED_WR_Byte(0X14, OLED_CMD); // DCDC ON
+    OLED_WR_Byte(0XAF, OLED_CMD); // DISPLAY ON
 }
 
 /**
@@ -133,9 +131,9 @@ void OLED_Display_On(void)
  */
 void OLED_Display_Off(void)
 {
-    OLED_WR_Byte(0X8D, OLED_CMD); //SET DCDC命令
-    OLED_WR_Byte(0X10, OLED_CMD); //DCDC OFF
-    OLED_WR_Byte(0XAE, OLED_CMD); //DISPLAY OFF
+    OLED_WR_Byte(0X8D, OLED_CMD); // SET DCDC命令
+    OLED_WR_Byte(0X10, OLED_CMD); // DCDC OFF
+    OLED_WR_Byte(0XAE, OLED_CMD); // DISPLAY OFF
 }
 
 /**
@@ -147,12 +145,12 @@ void OLED_Display(void)
     uint8_t i, n;
     for (i = 0; i < 8; i++)
     {
-        OLED_WR_Byte(0xb0 + i, OLED_CMD); //设置页地址（0~7）
-        OLED_WR_Byte(0x00, OLED_CMD);     //设置显示位置—列低地址
-        OLED_WR_Byte(0x10, OLED_CMD);     //设置显示位置—列高地址
+        OLED_WR_Byte(0xb0 + i, OLED_CMD); // 设置页地址（0~7）
+        OLED_WR_Byte(0x00, OLED_CMD);     // 设置显示位置—列低地址
+        OLED_WR_Byte(0x10, OLED_CMD);     // 设置显示位置—列高地址
         for (n = 0; n < 128; n++)
             OLED_WR_Byte(OLED_GRAM[n][i], OLED_DATA);
-    } //更新显示
+    } // 更新显示
 }
 
 /**
@@ -164,8 +162,8 @@ void OLED_Clear(void)
     uint8_t i, n;
     for (i = 0; i < 8; i++)
         for (n = 0; n < 128; n++)
-            OLED_GRAM[n][i] = 0X00;
-    OLED_Display(); //更新显示
+            OLED_GRAM[n][i] = 0x00;
+    // OLED_Display(); // 更新显示
 }
 
 /**
@@ -189,41 +187,41 @@ void OLED_Init(void)
 {
     OLED_GPIO_Init();
     delay1ms(200);
-    OLED_Reset(); //复位OLED
+    OLED_Reset(); // 复位OLED
 
     /**************初始化SSD1306*****************/
-    OLED_WR_Byte(0xAE, OLED_CMD); //关闭显示
-    OLED_WR_Byte(0xD5, OLED_CMD); //设置时钟分频因子,震荡频率
+    OLED_WR_Byte(0xAE, OLED_CMD); // 关闭显示
+    OLED_WR_Byte(0xD5, OLED_CMD); // 设置时钟分频因子,震荡频率
     OLED_WR_Byte(0x80, OLED_CMD); //[3:0],分频因子;[7:4],震荡频率
-    OLED_WR_Byte(0xA8, OLED_CMD); //设置驱动路数
-    OLED_WR_Byte(0X3F, OLED_CMD); //默认0X3F(1/64)
-    OLED_WR_Byte(0xD3, OLED_CMD); //设置显示偏移
-    OLED_WR_Byte(0X00, OLED_CMD); //默认为0
+    OLED_WR_Byte(0xA8, OLED_CMD); // 设置驱动路数
+    OLED_WR_Byte(0X3F, OLED_CMD); // 默认0X3F(1/64)
+    OLED_WR_Byte(0xD3, OLED_CMD); // 设置显示偏移
+    OLED_WR_Byte(0X00, OLED_CMD); // 默认为0
 
-    OLED_WR_Byte(0x40, OLED_CMD); //设置显示开始行 [5:0],行数.
+    OLED_WR_Byte(0x40, OLED_CMD); // 设置显示开始行 [5:0],行数.
 
-    OLED_WR_Byte(0x8D, OLED_CMD); //电荷泵设置
-    OLED_WR_Byte(0x14, OLED_CMD); //bit2，开启/关闭
-    OLED_WR_Byte(0x20, OLED_CMD); //设置内存地址模式
+    OLED_WR_Byte(0x8D, OLED_CMD); // 电荷泵设置
+    OLED_WR_Byte(0x14, OLED_CMD); // bit2，开启/关闭
+    OLED_WR_Byte(0x20, OLED_CMD); // 设置内存地址模式
     OLED_WR_Byte(0x02, OLED_CMD); //[1:0],00，列地址模式;01，行地址模式;10,页地址模式;默认10;
-    OLED_WR_Byte(0xA1, OLED_CMD); //段重定义设置,bit0:0,0->0;1,0->127;
-    OLED_WR_Byte(0xC0, OLED_CMD); //设置COM扫描方向;bit3:0,普通模式;1,重定义模式 COM[N-1]->COM0;N:驱动路数
-    OLED_WR_Byte(0xDA, OLED_CMD); //设置COM硬件引脚配置
+    OLED_WR_Byte(0xA1, OLED_CMD); // 段重定义设置,bit0:0,0->0;1,0->127;
+    OLED_WR_Byte(0xC0, OLED_CMD); // 设置COM扫描方向;bit3:0,普通模式;1,重定义模式 COM[N-1]->COM0;N:驱动路数
+    OLED_WR_Byte(0xDA, OLED_CMD); // 设置COM硬件引脚配置
     OLED_WR_Byte(0x12, OLED_CMD); //[5:4]配置
 
-    OLED_WR_Byte(0x81, OLED_CMD); //对比度设置
-    OLED_WR_Byte(0xEF, OLED_CMD); //1~255;默认0X7F (亮度设置,越大越亮)
-    OLED_WR_Byte(0xD9, OLED_CMD); //设置预充电周期
+    OLED_WR_Byte(0x81, OLED_CMD); // 对比度设置
+    OLED_WR_Byte(0xEF, OLED_CMD); // 1~255;默认0X7F (亮度设置,越大越亮)
+    OLED_WR_Byte(0xD9, OLED_CMD); // 设置预充电周期
     OLED_WR_Byte(0xf1, OLED_CMD); //[3:0],PHASE 1;[7:4],PHASE 2;
-    OLED_WR_Byte(0xDB, OLED_CMD); //设置VCOMH 电压倍率
+    OLED_WR_Byte(0xDB, OLED_CMD); // 设置VCOMH 电压倍率
     OLED_WR_Byte(0x30, OLED_CMD); //[6:4] 000,0.65*vcc;001,0.77*vcc;011,0.83*vcc;
 
-    OLED_WR_Byte(0xA4, OLED_CMD); //全局显示开启;bit0:1,开启;0,关闭;(白屏/黑屏)
-    OLED_WR_Byte(0xA6, OLED_CMD); //设置显示方式;bit0:1,反相显示;0,正常显示
-    OLED_WR_Byte(0xAF, OLED_CMD); //开启显示
+    OLED_WR_Byte(0xA4, OLED_CMD); // 全局显示开启;bit0:1,开启;0,关闭;(白屏/黑屏)
+    OLED_WR_Byte(0xA6, OLED_CMD); // 设置显示方式;bit0:1,反相显示;0,正常显示
+    OLED_WR_Byte(0xAF, OLED_CMD); // 开启显示
     OLED_Clear();
 
-    elog_i(TAG,"OLED Init!");
+    elog_i(TAG, "OLED Init!");
 }
 
 /**
@@ -237,7 +235,7 @@ void GUI_DrawPoint(uint8_t x, uint8_t y, uint8_t color)
 {
     uint8_t pos, bx, temp = 0;
     if (x > 131 || y > 63)
-        return; //超出范围了.
+        return; // 超出范围了.
     pos = 7 - y / 8;
     bx = y % 8;
     temp = 1 << (7 - bx);
@@ -264,13 +262,13 @@ void GUI_Fill(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
         for (y = y1; y <= y2; y++)
             GUI_DrawPoint(x, y, color);
     }
-    OLED_Display(); //更新显示
+    // OLED_Display(); // 更新显示
 }
 
 /**
- * @description: 在OLED上画一个水平线 
+ * @description: 在OLED上画一个水平线
  * @param {uint16_t} x0:    水平线起点所在列的位置
- * @param {uint8_t} y0:     水平线起点所在行的位置    
+ * @param {uint8_t} y0:     水平线起点所在行的位置
  * @param {uint16_t} x1:    水平线终点所在列的位置
  * @param {uint8_t} color:  显示颜色    1-白 ; 0-黑色
  * @return {*}
@@ -477,7 +475,7 @@ void GUI_LineWith(uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint8_t wi
     }
 }
 
-/** 
+/**
  * @description:    显示单个英文字符
  * @param {uint8_t} x:      字符显示位置的开始x坐标
  * @param {uint8_t} y:      字符显示位置的开始y坐标
@@ -490,13 +488,13 @@ void GUI_ShowChar(uint8_t x, uint8_t y, uint8_t chr, uint8_t size, uint8_t mode)
 {
     uint8_t temp, t, t1;
     uint8_t y0 = y;
-    chr = chr - ' '; //得到偏移后的值
+    chr = chr - ' '; // 得到偏移后的值
     for (t = 0; t < size; t++)
     {
         if (size == 12)
-            temp = oled_asc2_1206[chr][t]; //调用1206字体
+            temp = oled_asc2_1206[chr][t]; // 调用1206字体
         else
-            temp = oled_asc2_1608[chr][t]; //调用1608字体
+            temp = oled_asc2_1608[chr][t]; // 调用1608字体
         for (t1 = 0; t1 < 8; t1++)
         {
             if (temp & 0x80)
@@ -542,7 +540,7 @@ void GUI_ShowString(uint8_t x, uint8_t y, const uint8_t *p, uint8_t size, uint8_
             OLED_Clear();
         }
         GUI_ShowChar(x, y, *p, size, mode);
-        x += size/2;
+        x += size / 2;
         p++;
     }
 }
@@ -590,4 +588,122 @@ void GUI_ShowNum(uint8_t x, uint8_t y, uint32_t num, uint8_t len, uint8_t size, 
         }
         GUI_ShowChar(x + (size / 2) * t, y, temp + '0', size, mode);
     }
+}
+
+/**
+ * @description: 显示过场动画图像logo（通过改变索引值和图片对应的像素可以显示不同像素的图片）
+ * @param {uint8_t} mode 0：白色背景和黑色字符   1：黑色背景和白色字符
+ * @return {*}
+ */
+static void Show_Heat_logo(uint8_t mode)
+{
+    uint8_t temp, t1;
+    uint16_t j, i;
+    uint8_t y = 0, y0 = 0, x = 0;
+
+    i = (WIDTH / 2) * (HEIGHT / 4);
+
+    for (j = 0; j < i; j++)
+    {
+        temp = MiniHeating_logo[j]; // 调用图片
+        for (t1 = 0; t1 < 8; t1++)
+        {
+            if (temp & 0x80)
+                GUI_DrawPoint(x, y, mode);
+            else
+                GUI_DrawPoint(x, y, !mode);
+            temp <<= 1;
+            y++;
+            if ((y - y0) == HEIGHT)
+            {
+                y = y0;
+                x++;
+                break;
+            }
+        }
+    }
+}
+
+static int32_t disapper_temp = 0;
+static int32_t come_temp = 8;
+/**
+ * @description:  logo 消失接口
+ * @return {*} 0：正在消失，1：消失完成
+ */
+static uint32_t ui_disapper(void)
+{
+    uint32_t len = sizeof(MiniHeating_logo) / sizeof(MiniHeating_logo[0]);
+    uint8_t *p = *OLED_GRAM;
+    uint8_t return_flag = 0;
+    for (uint32_t i = 0; i < len; i++)
+    {
+        p[i] = p[i] & (rand() % 0xff) >> disapper_temp; // rand()%0xff = 0 ~ 0xff
+    }
+    disapper_temp += 2;
+    if (disapper_temp > 8)
+    {
+        return_flag = 1;
+        disapper_temp = 0;
+    }
+    return return_flag ? 0 : 1;
+}
+
+/**
+ * @description:  logo 显示接口
+ * @return {*}0：正在显示，1：显示完成
+ */
+static uint32_t ui_come(void)
+{
+    uint32_t len = sizeof(MiniHeating_logo) / sizeof(MiniHeating_logo[0]);
+    uint8_t *p = *OLED_GRAM;
+    uint8_t return_flag = 0;
+    for (uint32_t i = 0; i < len; i++)
+    {
+        p[i] = p[i] & (rand() % 0xff) >> come_temp; // rand()%0xff = 0 ~ 0xff
+    }
+    come_temp -= 2;
+    if (come_temp < 0)
+    {
+        return_flag = 1;
+        come_temp = 8;
+    }
+    return return_flag ? 0 : 1;
+}
+
+static uint8_t flag = 0;
+static uint8_t stop_flag = 0;
+/**
+ * @description: 初始logo过场动画
+ * @return {*} 0：动画运行中，1：动画运行完成 
+ */
+uint8_t Transitions_logo(void)
+{
+    uint8_t anim_state = 0;
+    OLED_Clear();      // 清除内部缓冲区
+    Show_Heat_logo(1); // 第一段输出位置
+    if (flag == 1)
+    {
+        if (ui_disapper() == 0)
+        {
+            flag = 0;
+            anim_state = 1;
+        }
+    }
+    else
+    {
+        if (ui_come() == 0)
+        {
+            flag = 1;
+            stop_flag = 1;
+            Show_Heat_logo(1);
+        }
+    }
+    OLED_Display(); // transfer internal memory to the display
+    if (stop_flag == 1)
+    {
+        stop_flag = 0;
+        delay1ms(2000);
+    }
+    delay1ms(100);
+    return anim_state;
 }

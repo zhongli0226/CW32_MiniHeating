@@ -29,3 +29,9 @@ PWM部分调试完成，可以设置不同频率，占空比的PWM。
 调通oled外设，ec11按键逻辑编写完成
 
 ![1691070784430](pic/1691070784430.png)
+
+## 2023年8月5日
+
+开机过渡动画设计完成。
+
+![ezgif.com-video-to-gif](pic/ezgif.com-video-to-gif.gif)
