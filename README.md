@@ -35,3 +35,9 @@ PWM部分调试完成，可以设置不同频率，占空比的PWM。
 开机过渡动画设计完成。
 
 ![ezgif.com-video-to-gif](pic/ezgif.com-video-to-gif.gif)
+
+## 2023年8月6日
+
+完成控制板pcb制作
+
+![1691291462621](pic/1691291462621.png)
