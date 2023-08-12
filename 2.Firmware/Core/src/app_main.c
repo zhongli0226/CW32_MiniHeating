@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-28 13:46:14
  * @LastEditors: tangwc
- * @LastEditTime: 2023-08-05 12:58:38
+ * @LastEditTime: 2023-08-12 16:46:49
  * @FilePath: \2.Firmware\Core\src\app_main.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -17,9 +17,10 @@
 #include "uart.h"
 #include "atimer.h"
 #include "adc.h"
-#include "oled.h"
 #include "ec11.h"
 #include "btimer.h"
+#include "oled.h"
+#include "user_gui.h"
 #include "elog.h"
 
 #define TAG "app_main"
@@ -83,6 +84,8 @@ int main(void)
 {
     bsp_init();
     while (Transitions_logo() == 0);
+    main_gui_show();
+    OLED_Display();
     while (1)
     {
         // OLED_Display();

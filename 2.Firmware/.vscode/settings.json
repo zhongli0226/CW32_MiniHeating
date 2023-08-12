@@ -22,6 +22,11 @@
         "elog.h": "c",
         "ec11.h": "c",
         "multi_button.h": "c",
-        "cw32f030_btim.h": "c"
+        "cw32f030_btim.h": "c",
+        "basics_font.h": "c",
+        "oled_gui.h": "c",
+        "user_font.h": "c",
+        "oled.h": "c",
+        "stdint.h": "c"
     }
 }
