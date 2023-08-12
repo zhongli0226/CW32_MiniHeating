@@ -10,8 +10,11 @@ C_SOURCES += $(wildcard $(User_DIR)/oled/*.c)
 C_SOURCES += $(wildcard $(User_DIR)/GUI/*.c)
 
 C_SOURCES += $(wildcard $(User_DIR)/EC11/*.c)
+
+C_SOURCES += $(wildcard $(User_DIR)/MAX6675/*.c)
 # 向 C_INCLUDES 中添加头文件路径
 C_INCLUDES += -I$(User_DIR)/easylogger/inc
 C_INCLUDES += -I$(User_DIR)/OLED
 C_INCLUDES += -I$(User_DIR)/GUI
 C_INCLUDES += -I$(User_DIR)/EC11
+C_INCLUDES += -I$(User_DIR)/MAX6675

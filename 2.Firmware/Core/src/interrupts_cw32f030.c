@@ -322,8 +322,8 @@ void BTIM1_IRQHandler(void)
     if (BTIM_GetITStatus(CW_BTIM1, BTIM_IT_OV))
     {
         //处理按键信号
-        button_ticks();
         BTIM_ClearITPendingBit(CW_BTIM1, BTIM_IT_OV);
+        button_ticks();
     }
     /* USER CODE END */
 }

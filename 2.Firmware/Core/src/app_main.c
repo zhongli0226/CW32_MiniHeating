@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-28 13:46:14
  * @LastEditors: tangwc
- * @LastEditTime: 2023-08-12 16:46:49
+ * @LastEditTime: 2023-08-13 00:00:49
  * @FilePath: \2.Firmware\Core\src\app_main.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -21,6 +21,7 @@
 #include "btimer.h"
 #include "oled.h"
 #include "user_gui.h"
+#include "max6675.h"
 #include "elog.h"
 
 #define TAG "app_main"
@@ -69,15 +70,17 @@ static void bsp_init(void)
     UART1_Iint();
     elog_system_init();
     // pwm外设 初始化
-    ATIMER_init();
+    // ATIMER_init();
     // 定时器 初始化
     BTIMER_init();
     // adc 初始化
-    ADC_init();
+    // ADC_init();
     // ec11 初始化
     EC11_Init();
     // oled 初始化
     OLED_Init();
+    // max6675 初始化
+    MAX6675_Init();
 }
 
 int main(void)
@@ -88,9 +91,10 @@ int main(void)
     OLED_Display();
     while (1)
     {
-        // OLED_Display();
+        MAX6675_Read();
         delay1ms(1000);
         // ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
+        // OLED_Display();
     }
     return 0;
 }

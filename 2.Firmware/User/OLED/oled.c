@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-03 08:53:51
  * @LastEditors: tangwc
- * @LastEditTime: 2023-08-12 15:43:54
+ * @LastEditTime: 2023-08-12 21:58:38
  * @FilePath: \2.Firmware\User\OLED\oled.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -27,20 +27,20 @@
 #define OLED_CS_GPIO GPIO_PIN_9
 
 //-----------------OLED端口操作----------------
-#define OLED_CLK_CLR GPIO_WritePin(CW_GPIOB, OLED_CLK_GPIO, GPIO_Pin_RESET)
-#define OLED_CLK_SET GPIO_WritePin(CW_GPIOB, OLED_CLK_GPIO, GPIO_Pin_SET)
+#define OLED_CLK_CLR() GPIO_WritePin(CW_GPIOB, OLED_CLK_GPIO, GPIO_Pin_RESET)
+#define OLED_CLK_SET() GPIO_WritePin(CW_GPIOB, OLED_CLK_GPIO, GPIO_Pin_SET)
 
-#define OLED_MOSI_CLR GPIO_WritePin(CW_GPIOB, OLED_MOSI_GPIO, GPIO_Pin_RESET)
-#define OLED_MOSI_SET GPIO_WritePin(CW_GPIOB, OLED_MOSI_GPIO, GPIO_Pin_SET)
+#define OLED_MOSI_CLR() GPIO_WritePin(CW_GPIOB, OLED_MOSI_GPIO, GPIO_Pin_RESET)
+#define OLED_MOSI_SET() GPIO_WritePin(CW_GPIOB, OLED_MOSI_GPIO, GPIO_Pin_SET)
 
-#define OLED_RST_Clr GPIO_WritePin(CW_GPIOB, OLED_RST_GPIO, GPIO_Pin_RESET)
-#define OLED_RST_Set GPIO_WritePin(CW_GPIOB, OLED_RST_GPIO, GPIO_Pin_SET)
+#define OLED_RST_Clr() GPIO_WritePin(CW_GPIOB, OLED_RST_GPIO, GPIO_Pin_RESET)
+#define OLED_RST_Set() GPIO_WritePin(CW_GPIOB, OLED_RST_GPIO, GPIO_Pin_SET)
 
-#define OLED_DC_Clr GPIO_WritePin(CW_GPIOB, OLED_DC_GPIO, GPIO_Pin_RESET)
-#define OLED_DC_Set GPIO_WritePin(CW_GPIOB, OLED_DC_GPIO, GPIO_Pin_SET)
+#define OLED_DC_Clr() GPIO_WritePin(CW_GPIOB, OLED_DC_GPIO, GPIO_Pin_RESET)
+#define OLED_DC_Set() GPIO_WritePin(CW_GPIOB, OLED_DC_GPIO, GPIO_Pin_SET)
 
-#define OLED_CS_Clr GPIO_WritePin(CW_GPIOB, OLED_CS_GPIO, GPIO_Pin_RESET)
-#define OLED_CS_Set GPIO_WritePin(CW_GPIOB, OLED_CS_GPIO, GPIO_Pin_SET)
+#define OLED_CS_Clr() GPIO_WritePin(CW_GPIOB, OLED_CS_GPIO, GPIO_Pin_RESET)
+#define OLED_CS_Set() GPIO_WritePin(CW_GPIOB, OLED_CS_GPIO, GPIO_Pin_SET)
 
 //--------------OLED buff缓存区域---------------------
 static uint8_t OLED_GRAM[OLED_WIDTH * (OLED_HEIGHT / 8)] = {0};
@@ -77,14 +77,14 @@ static void SPI_WriteByte(uint8_t Data)
     {
         if (Data & 0x80)
         {
-            OLED_MOSI_SET; // 写数据1
+            OLED_MOSI_SET(); // 写数据1
         }
         else
         {
-            OLED_MOSI_CLR; // 写数据0
+            OLED_MOSI_CLR(); // 写数据0
         }
-        OLED_CLK_CLR; // 将时钟拉低拉高
-        OLED_CLK_SET; // 发送1bit数据
+        OLED_CLK_CLR(); // 将时钟拉低拉高
+        OLED_CLK_SET(); // 发送1bit数据
         Data <<= 1;
     }
 }
@@ -99,15 +99,15 @@ static void OLED_WR_Byte(uint8_t dat, uint8_t cmd)
 {
     if (cmd)
     {
-        OLED_DC_Set;
+        OLED_DC_Set();
     }
     else
     {
-        OLED_DC_Clr;
+        OLED_DC_Clr();
     }
-    OLED_CS_Clr;
+    OLED_CS_Clr();
     SPI_WriteByte(dat);
-    OLED_CS_Set;
+    OLED_CS_Set();
 }
 
 /**
@@ -168,11 +168,11 @@ void OLED_Clear(void)
  */
 void OLED_Reset(void)
 {
-    OLED_RST_Set;
+    OLED_RST_Set();
     delay1ms(100);
-    OLED_RST_Clr;
+    OLED_RST_Clr();
     delay1ms(100);
-    OLED_RST_Set;
+    OLED_RST_Set();
 }
 
 /**

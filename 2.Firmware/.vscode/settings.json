@@ -27,6 +27,8 @@
         "oled_gui.h": "c",
         "user_font.h": "c",
         "oled.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "user_gui.h": "c",
+        "btimer.h": "c"
     }
 }
