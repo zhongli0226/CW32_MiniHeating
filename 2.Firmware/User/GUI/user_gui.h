@@ -16,4 +16,10 @@ uint8_t Transitions_logo(void);
  */
 void main_gui_show(void);
 
+/**
+ * @description: 刷新目标温度
+ * @return {*}
+ */
+void refresh_target_temp(void);
+
 #endif

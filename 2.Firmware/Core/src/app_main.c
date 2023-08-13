@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-28 13:46:14
  * @LastEditors: tangwc
- * @LastEditTime: 2023-08-13 00:00:49
+ * @LastEditTime: 2023-08-13 14:07:33
  * @FilePath: \2.Firmware\Core\src\app_main.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -90,11 +90,11 @@ int main(void)
     main_gui_show();
     OLED_Display();
     while (1)
-    {
-        MAX6675_Read();
-        delay1ms(1000);
+    {   
+        refresh_target_temp();
         // ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
-        // OLED_Display();
+        OLED_Display();
+        // delay1ms(500);
     }
     return 0;
 }

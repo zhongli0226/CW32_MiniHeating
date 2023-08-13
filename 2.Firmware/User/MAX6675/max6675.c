@@ -1,3 +1,14 @@
+/*
+ * @Description: 
+ * @Version: 
+ * @Autor: tangwc
+ * @Date: 2023-08-12 21:44:00
+ * @LastEditors: tangwc
+ * @LastEditTime: 2023-08-13 13:14:23
+ * @FilePath: \2.Firmware\User\MAX6675\max6675.c
+ * 
+ *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
+ */
 #include <string.h>
 
 #include "cw32f030_gpio.h"
@@ -86,6 +97,6 @@ uint16_t MAX6675_Read(void)
     value_dec = value_dec / 4; // 小数 与上述同理
     if (value >= 1024)
         value = 1024;
-    elog_i(TAG, "tempvalue:%d.%d", value, value_dec);
+    // elog_i(TAG, "tempvalue:%d.%d", value, value_dec);
     return value;
 }

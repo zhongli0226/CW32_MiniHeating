@@ -1,10 +1,21 @@
+/*
+ * @Description: 
+ * @Version: 
+ * @Autor: tangwc
+ * @Date: 2023-08-12 15:21:09
+ * @LastEditors: tangwc
+ * @LastEditTime: 2023-08-13 14:27:22
+ * @FilePath: \2.Firmware\User\GUI\user_gui.c
+ * 
+ *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
+ */
 #include <stdlib.h>
 
 #include "oled.h"
 #include "oled_gui.h"
 #include "user_gui.h"
 #include "user_font.h"
-
+#include "temp_control.h"
 #include "system_cw32f030.h"
 
 #include "elog.h"
@@ -139,4 +150,14 @@ uint8_t Transitions_logo(void)
 void main_gui_show(void)
 {
     Show_fullscreen_bg(main_ui_bg, 0);
+}
+
+/**
+ * @description: 刷新目标温度
+ * @return {*}
+ */
+void refresh_target_temp(void)
+{
+    uint16_t target_temp = Get_target_temp();
+    GUI_ShowNum(3, 53, target_temp, 3, 12, 0);
 }

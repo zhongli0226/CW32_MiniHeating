@@ -3,6 +3,7 @@
 #include "cw32f030_rcc.h"
 
 #include "multi_button.h"
+#include "temp_control.h"
 #include "ec11.h"
 #include "elog.h"
 
@@ -142,11 +143,13 @@ void EC11_HandlerCallBack(void)
             EC11_2_flag = !blv; // 取反是因为 alv,blv必然异步，一高一低。
             if (EC11_1_flag && EC11_2_flag)
             {
-                elog_i(TAG, "right on");
+                target_temp_step_down();
+                // elog_i(TAG, "right on");
             }
             if (EC11_1_flag == 0 && EC11_2_flag == 0)
             {
-                elog_i(TAG, "left on");
+                target_temp_step_up();
+                // elog_i(TAG, "left on");
             }
             EC11_flag = 0;
         }
