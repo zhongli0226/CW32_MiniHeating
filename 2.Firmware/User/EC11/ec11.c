@@ -9,9 +9,9 @@
 
 #define TAG "EC11"
 
-#define EC11_A GPIO_PIN_3       //PB3
-#define EC11_B GPIO_PIN_4       //PB4 
-#define EC11_KEY GPIO_PIN_15    //PA15
+#define EC11_A GPIO_PIN_8       //PB8
+#define EC11_B GPIO_PIN_9       //PB9 
+#define EC11_KEY GPIO_PIN_7     //PB7
 
 enum Button_IDs
 {
@@ -29,7 +29,7 @@ static uint8_t read_button_GPIO(uint8_t button_id)
     switch (button_id)
     {
     case btn1_id:
-        return GPIO_ReadPin(CW_GPIOA, EC11_KEY);
+        return GPIO_ReadPin(CW_GPIOB, EC11_KEY);
     default:
         return 0;
     }
@@ -81,8 +81,7 @@ void EC11_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 
-    // 使能GPIOA的配置时钟
-    __RCC_GPIOA_CLK_ENABLE();
+    // 使能GPIOB的配置时钟
     __RCC_GPIOB_CLK_ENABLE();
 
     GPIO_InitStruct.IT = GPIO_IT_RISING | GPIO_IT_FALLING;
@@ -93,18 +92,12 @@ void EC11_Init(void)
 
     GPIO_InitStruct.IT = GPIO_IT_NONE;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT_PULLUP;
-    GPIO_InitStruct.Pins = EC11_B;
+    GPIO_InitStruct.Pins = EC11_B | EC11_KEY;
     GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
     GPIO_Init(CW_GPIOB, &GPIO_InitStruct);
 
-    GPIO_InitStruct.IT = GPIO_IT_NONE;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT_PULLUP;
-    GPIO_InitStruct.Pins = EC11_KEY;
-    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-    GPIO_Init(CW_GPIOA, &GPIO_InitStruct);
-
     // 清除PB中断标记并使能NVIC
-    GPIOB_INTFLAG_CLR(bv3);
+    GPIOB_INTFLAG_CLR(bv8);
     NVIC_EnableIRQ(GPIOB_IRQn);
     elog_i(TAG, "EC11 GPIO Init!");
 
@@ -126,7 +119,7 @@ void EC11_Init(void)
 
 void EC11_HandlerCallBack(void)
 {
-    if (CW_GPIOB->ISR_f.PIN3)
+    if (CW_GPIOB->ISR_f.PIN8)
     {
         // 只要处理一个脚的外部中断--上升沿&下降沿
         GPIO_PinState alv = GPIO_ReadPin(CW_GPIOB, EC11_A);
@@ -154,6 +147,6 @@ void EC11_HandlerCallBack(void)
             EC11_flag = 0;
         }
 
-        GPIOB_INTFLAG_CLR(bv3);
+        GPIOB_INTFLAG_CLR(bv8);
     }
 }

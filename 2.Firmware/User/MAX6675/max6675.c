@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 21:44:00
  * @LastEditors: tangwc
- * @LastEditTime: 2023-08-13 13:14:23
+ * @LastEditTime: 2023-09-01 22:27:00
  * @FilePath: \2.Firmware\User\MAX6675\max6675.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -22,9 +22,9 @@
 #define TAG "MAX6675"
 
 //-----------------max6675端口定义----------------
-#define MAX6675_CLK_GPIO GPIO_PIN_10  // PA10
-#define MAX6675_MISO_GPIO GPIO_PIN_11 // PA11
-#define MAX6675_CS_GPIO GPIO_PIN_12   // PA12
+#define MAX6675_CLK_GPIO GPIO_PIN_7  // PA7
+#define MAX6675_MISO_GPIO GPIO_PIN_6 // PA6
+#define MAX6675_CS_GPIO GPIO_PIN_5   // PA5
 
 //-----------------OLED端口操作----------------
 #define MAX6675_CLK_CLR() GPIO_WritePin(CW_GPIOA, MAX6675_CLK_GPIO, GPIO_Pin_RESET)

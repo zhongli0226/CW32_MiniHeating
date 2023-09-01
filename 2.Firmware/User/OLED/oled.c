@@ -20,15 +20,15 @@
 #define TAG "OLED"
 
 //-----------------OLED端口定义----------------
-#define OLED_CLK_GPIO GPIO_PIN_5
-#define OLED_MOSI_GPIO GPIO_PIN_6
-#define OLED_RST_GPIO GPIO_PIN_7
-#define OLED_DC_GPIO GPIO_PIN_8
-#define OLED_CS_GPIO GPIO_PIN_9
+#define OLED_CLK_GPIO GPIO_PIN_15    //PA15
+#define OLED_MOSI_GPIO GPIO_PIN_3   //PB3
+#define OLED_RST_GPIO GPIO_PIN_4    //PB4
+#define OLED_DC_GPIO GPIO_PIN_5     //PB5
+#define OLED_CS_GPIO GPIO_PIN_6     //PB6
 
 //-----------------OLED端口操作----------------
-#define OLED_CLK_CLR() GPIO_WritePin(CW_GPIOB, OLED_CLK_GPIO, GPIO_Pin_RESET)
-#define OLED_CLK_SET() GPIO_WritePin(CW_GPIOB, OLED_CLK_GPIO, GPIO_Pin_SET)
+#define OLED_CLK_CLR() GPIO_WritePin(CW_GPIOA, OLED_CLK_GPIO, GPIO_Pin_RESET)
+#define OLED_CLK_SET() GPIO_WritePin(CW_GPIOA, OLED_CLK_GPIO, GPIO_Pin_SET)
 
 #define OLED_MOSI_CLR() GPIO_WritePin(CW_GPIOB, OLED_MOSI_GPIO, GPIO_Pin_RESET)
 #define OLED_MOSI_SET() GPIO_WritePin(CW_GPIOB, OLED_MOSI_GPIO, GPIO_Pin_SET)
@@ -53,14 +53,21 @@ static void OLED_GPIO_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 
-    // 使能GPIOB的配置时钟
+    // 使能GPIOA GPIOB的配置时钟
+    __RCC_GPIOA_CLK_ENABLE();
     __RCC_GPIOB_CLK_ENABLE();
 
     GPIO_InitStruct.IT = GPIO_IT_NONE;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pins = OLED_CLK_GPIO | OLED_MOSI_GPIO | OLED_RST_GPIO | OLED_DC_GPIO | OLED_CS_GPIO;
+    GPIO_InitStruct.Pins = OLED_MOSI_GPIO | OLED_RST_GPIO | OLED_DC_GPIO | OLED_CS_GPIO;
     GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
     GPIO_Init(CW_GPIOB, &GPIO_InitStruct);
+
+    GPIO_InitStruct.IT = GPIO_IT_NONE;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pins = OLED_CLK_GPIO;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_Init(CW_GPIOA, &GPIO_InitStruct);
 
     elog_i(TAG, "OLED GPIO Init!");
 }
