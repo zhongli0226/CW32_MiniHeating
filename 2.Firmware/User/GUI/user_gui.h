@@ -22,4 +22,10 @@ void main_gui_show(void);
  */
 void refresh_target_temp(void);
 
+/**
+ * @description: 刷新电源电压
+ * @return {*}
+ */
+void refresh_pwr_Voltage(void);
+
 #endif

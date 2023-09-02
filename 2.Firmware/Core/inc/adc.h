@@ -6,4 +6,6 @@ void ADC_init(void);
 
 void ADC_IRQHandlerCallBack(void);
 
+float GET_PWR_Value(void);
+
 #endif

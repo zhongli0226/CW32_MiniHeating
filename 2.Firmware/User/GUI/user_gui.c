@@ -1,13 +1,13 @@
 /*
- * @Description: 
- * @Version: 
+ * @Description:
+ * @Version:
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-08-13 14:27:22
+ * @LastEditTime: 2023-09-02 13:30:55
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
- * 
- *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
+ *
+ *  Copyright (c) 2023 by tangwc, All Rights Reserved.
  */
 #include <stdlib.h>
 
@@ -17,6 +17,8 @@
 #include "user_font.h"
 #include "temp_control.h"
 #include "system_cw32f030.h"
+
+#include "adc.h"
 
 #include "elog.h"
 
@@ -160,4 +162,20 @@ void refresh_target_temp(void)
 {
     uint16_t target_temp = Get_target_temp();
     GUI_ShowNum(3, 53, target_temp, 3, 12, 0);
+}
+/**
+ * @description: 刷新电源电压
+ * @return {*}
+ */
+void refresh_pwr_Voltage(void)
+{
+    float Voltage = GET_PWR_Value();
+    elog_i(TAG, "pwr:%f", Voltage);
+
+    uint16_t Voltage_int = (uint16_t)Voltage;
+    uint16_t Voltage_float = (uint16_t)((Voltage_int * 10) % 10);
+    GUI_ShowNum(98, 0, Voltage_int, 2, 12, 1);
+    GUI_ShowChar(110,0,'.',12,1); 
+    GUI_ShowNum(116, 0, Voltage_float, 1, 12, 1);
+    GUI_ShowChar(122,0,'V',12,1); 
 }

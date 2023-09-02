@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-28 13:46:14
  * @LastEditors: tangwc
- * @LastEditTime: 2023-08-13 14:07:33
+ * @LastEditTime: 2023-09-02 13:30:47
  * @FilePath: \2.Firmware\Core\src\app_main.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -70,11 +70,11 @@ static void bsp_init(void)
     UART1_Iint();
     elog_system_init();
     // pwm外设 初始化
-    // ATIMER_init();
+    ATIMER_init();
     // 定时器 初始化
     BTIMER_init();
     // adc 初始化
-    // ADC_init();
+    ADC_init();
     // ec11 初始化
     EC11_Init();
     // oled 初始化
@@ -92,9 +92,10 @@ int main(void)
     while (1)
     {   
         refresh_target_temp();
-        // ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
+        refresh_pwr_Voltage();
         OLED_Display();
-        // delay1ms(500);
+        ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
+        delay1ms(500);
     }
     return 0;
 }
