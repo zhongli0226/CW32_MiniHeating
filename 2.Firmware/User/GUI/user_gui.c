@@ -1,10 +1,10 @@
 /*
- * @Description:
+ * @Description: gui 刷新函数
  * @Version:
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-02 13:30:55
+ * @LastEditTime: 2023-09-03 00:50:06
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -163,19 +163,59 @@ void refresh_target_temp(void)
     uint16_t target_temp = Get_target_temp();
     GUI_ShowNum(3, 53, target_temp, 3, 12, 0);
 }
+
+/**
+ * @description: 刷新实际温度
+ * @return {*}
+ */
+static uint8_t refresh_actual_temp_flag = 0;
+void set_actual_temp_flag(void)
+{
+    refresh_actual_temp_flag = 1;
+}
+void refresh_actual_temp(void)
+{
+    if (refresh_actual_temp_flag)
+    {
+        uint16_t actual_temp = Get_actual_temp();
+        GUI_ShowNum(0, 12, actual_temp, 3, 40, 0);
+        refresh_actual_temp_flag = 0;
+    }
+
+}
 /**
  * @description: 刷新电源电压
  * @return {*}
  */
+static uint8_t refresh_pwr_Voltage_flag = 0;
+void set_pwr_Volt_flag(void)
+{
+    refresh_pwr_Voltage_flag = 1;
+}
 void refresh_pwr_Voltage(void)
 {
-    float Voltage = GET_PWR_Value();
-    elog_i(TAG, "pwr:%f", Voltage);
+    if (refresh_pwr_Voltage_flag)
+    {
+        float Voltage = GET_PWR_Value();
+        // elog_i(TAG, "pwr:%f", Voltage);
 
-    uint16_t Voltage_int = (uint16_t)Voltage;
-    uint16_t Voltage_float = (uint16_t)((Voltage_int * 10) % 10);
-    GUI_ShowNum(98, 0, Voltage_int, 2, 12, 1);
-    GUI_ShowChar(110,0,'.',12,1); 
-    GUI_ShowNum(116, 0, Voltage_float, 1, 12, 1);
-    GUI_ShowChar(122,0,'V',12,1); 
+        uint16_t Voltage_int = (uint16_t)Voltage;
+        uint16_t Voltage_float = (uint16_t)((Voltage_int * 10) % 10);
+        GUI_ShowNum(98, 0, Voltage_int, 2, 12, 1);
+        GUI_ShowChar(110, 0, '.', 12, 1);
+        GUI_ShowNum(116, 0, Voltage_float, 1, 12, 1);
+        GUI_ShowChar(122, 0, 'V', 12, 1);
+        refresh_pwr_Voltage_flag = 0;
+    }
+}
+
+/**
+ * @description: 显示功率占比
+ * @return {*}
+ */
+void refresh_pwm_prop(void)
+{
+    uint16_t pwm_prop = GET_pwm_prop();
+    GUI_ShowNum(106, 53, pwm_prop, 3, 12, 0);
+    GUI_ShowChar(123, 53, '%', 12, 0);
 }

@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-28 13:46:14
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-02 13:30:47
+ * @LastEditTime: 2023-09-03 00:47:44
  * @FilePath: \2.Firmware\Core\src\app_main.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -85,17 +85,19 @@ static void bsp_init(void)
 
 int main(void)
 {
-    bsp_init();
+    bsp_init(); // 外设初始化
+    // 过场动画
     while (Transitions_logo() == 0);
+    // 主界面显示
     main_gui_show();
-    OLED_Display();
     while (1)
     {   
         refresh_target_temp();
+        refresh_actual_temp();
         refresh_pwr_Voltage();
+        refresh_pwm_prop();
         OLED_Display();
-        ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
-        delay1ms(500);
+        // delay1ms(500);
     }
     return 0;
 }

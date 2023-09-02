@@ -18,12 +18,14 @@
 #include "app_main.h"
 #include "interrupts_cw32f030.h"
 #include "cw32f030_btim.h"
+#include "cw32f030_adc.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "atimer.h"
 #include "uart.h"
 #include "adc.h"
 #include "ec11.h"
+#include "user_gui.h"
 #include "multi_button.h"
 #include "elog.h"
 /* USER CODE END Includes */
@@ -316,14 +318,23 @@ void GTIM4_IRQHandler(void)
 /**
  * @brief This funcation handles BTIM1
  */
+static uint16_t time_flag_1s = 0;
 void BTIM1_IRQHandler(void)
 {
     /* USER CODE BEGIN */
     if (BTIM_GetITStatus(CW_BTIM1, BTIM_IT_OV))
     {
         //处理按键信号
-        BTIM_ClearITPendingBit(CW_BTIM1, BTIM_IT_OV);
         button_ticks();
+        time_flag_1s++;
+        if (time_flag_1s == 200)//1s
+        {
+            time_flag_1s = 0;
+            set_pwr_Volt_flag();
+            set_actual_temp_flag();
+            ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
+        }
+        BTIM_ClearITPendingBit(CW_BTIM1, BTIM_IT_OV);
     }
     /* USER CODE END */
 }

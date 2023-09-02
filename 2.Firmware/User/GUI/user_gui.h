@@ -21,11 +21,23 @@ void main_gui_show(void);
  * @return {*}
  */
 void refresh_target_temp(void);
+/**
+ * @description: 刷新实际温度
+ * @return {*}
+ */
+void set_actual_temp_flag(void);
+void refresh_actual_temp(void);
 
 /**
  * @description: 刷新电源电压
  * @return {*}
  */
+void set_pwr_Volt_flag(void);
 void refresh_pwr_Voltage(void);
+/**
+ * @description: 显示功率占比
+ * @return {*}
+ */
+void refresh_pwm_prop(void);
 
 #endif

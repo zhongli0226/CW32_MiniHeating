@@ -4,11 +4,9 @@
 #include "oled_gui.h"
 #include "basics_font.h"
 
-
 #include "elog.h"
 
 #define TAG "OLED_GUI"
-
 
 /**
  * @description: 在oled上画一个点
@@ -267,7 +265,7 @@ void GUI_LineWith(uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint8_t wi
  * @param {uint8_t} x:      字符显示位置的开始x坐标
  * @param {uint8_t} y:      字符显示位置的开始y坐标
  * @param {uint8_t} chr:    显示字符的ASCII码（0〜94）
- * @param {uint8_t} size:   显示字符的大小（8,16）
+ * @param {uint8_t} size:   显示字符的大小（12,16）
  * @param {uint8_t} mode:   0：白色背景和黑色字符   1：黑色背景和白色字符
  * @return {*}
  */
@@ -275,13 +273,28 @@ void GUI_ShowChar(uint8_t x, uint8_t y, uint8_t chr, uint8_t size, uint8_t mode)
 {
     uint8_t temp, t, t1;
     uint8_t y0 = y;
-    chr = chr - ' '; // 得到偏移后的值
-    for (t = 0; t < size; t++)
+    chr = chr - ' ';                                                // 得到偏移后的值
+    uint8_t csize = (size / 8 + ((size % 8) ? 1 : 0)) * (size / 2); // 得到字体一个字符对应点阵集所占的字节数
+    for (t = 0; t < csize; t++)
     {
         if (size == 12)
             temp = oled_asc2_1206[chr][t]; // 调用1206字体
-        else
+        else if (size == 16)
             temp = oled_asc2_1608[chr][t]; // 调用1608字体
+        else if (size == 40)
+        {
+            // 40字体特殊处理
+            if ((chr + ' ') >= '0' && (chr + ' ') <= '9')
+                temp = oled_asc2_4020[(chr + ' ') - '0'][t]; // 调用4020字体
+            else if ((chr + ' ') == 'E')
+                temp = oled_asc2_4020[10][t]; // 调用4020字体
+            else if ((chr + ' ') == 'R')
+                temp = oled_asc2_4020[11][t]; // 调用4020字体
+            else 
+                return;
+        }
+        else
+            return;
         for (t1 = 0; t1 < 8; t1++)
         {
             if (temp & 0x80)

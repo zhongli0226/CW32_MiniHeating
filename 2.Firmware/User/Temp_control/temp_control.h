@@ -27,4 +27,10 @@ void target_temp_step_up(void);
  */
 void target_temp_step_down(void);
 
+/**
+ * @description: 获得pwm百分比
+ * @return {*}
+ */
+uint16_t GET_pwm_prop(void);
+
 #endif

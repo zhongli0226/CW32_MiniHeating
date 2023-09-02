@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-27 08:39:33
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-02 14:33:50
+ * @LastEditTime: 2023-09-02 22:15:43
  * @FilePath: \2.Firmware\Core\src\atimer.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -76,7 +76,7 @@ void ATIMER_init(void)
 
     ATIM_ITConfig(ATIM_CR_IT_OVE, ENABLE);
     ATIM_CH1Config(ATIM_CHxB_CIE, ENABLE);
-    ATIM_SetCompare1B(500);
+    ATIM_SetCompare1B(0);
     ATIM_CtrlPWMOutputs(ENABLE);
     ATIM_Cmd(ENABLE);
 
@@ -87,31 +87,10 @@ void ATIMER_init(void)
 
 void ATIM_IRQHandlerCallBack(void)
 {
-    // static uint16_t duration = 0;
-    // static uint8_t flag = 1;
 
     if (ATIM_GetITStatus(ATIM_IT_OVF))
     {
         ATIM_ClearITPendingBit(ATIM_IT_OVF);
-        // if(flag)
-        // {
-        //     duration++;
-        //     if(duration >= 1000)
-        //     {
-        //         flag = 0;
-        //         elog_i(TAG,"pwm down!");
-        //     }
-        // }
-        // else
-        // {
-        //     duration--;
-        //     if(duration == 0)
-        //     {
-        //         flag = 1;
-        //         elog_i(TAG,"pwm up!");
-        //     }
-        // }
-        // ATIM_SetCompare1B(duration);
     }
 
     if (ATIM_GetITStatus(ATIM_IT_C1BF))
