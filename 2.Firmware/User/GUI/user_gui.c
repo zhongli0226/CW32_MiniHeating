@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-03 00:50:06
+ * @LastEditTime: 2023-09-03 22:57:20
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -17,13 +17,19 @@
 #include "user_font.h"
 #include "temp_control.h"
 #include "system_cw32f030.h"
-
 #include "adc.h"
-
 #include "elog.h"
 
 #define TAG "USER_GUI"
 
+typedef enum
+{
+    PROCESS_INIT = 0,
+    PROCESS_MAIN_UI,
+    PROCESS_MENU,
+} process_type_t;
+
+static process_type_t main_ui_process = PROCESS_INIT;
 /**
  * @description: 刷新全屏背景图片
  * @param {uint8_t*} bg 背景图片地址
@@ -112,7 +118,7 @@ static uint8_t come_flag = 0;
  * @description: 初始logo过场动画
  * @return {*} 0：动画运行中，1：动画运行完成
  */
-uint8_t Transitions_logo(void)
+static uint8_t Transitions_logo(void)
 {
     uint8_t anim_state = 0;
     OLED_Clear();                            // 清除内部缓冲区
@@ -149,7 +155,7 @@ uint8_t Transitions_logo(void)
  * @description: 主界面背景显示
  * @return {*}
  */
-void main_gui_show(void)
+static void main_gui_show(void)
 {
     Show_fullscreen_bg(main_ui_bg, 0);
 }
@@ -158,7 +164,7 @@ void main_gui_show(void)
  * @description: 刷新目标温度
  * @return {*}
  */
-void refresh_target_temp(void)
+static void refresh_target_temp(void)
 {
     uint16_t target_temp = Get_target_temp();
     GUI_ShowNum(3, 53, target_temp, 3, 12, 0);
@@ -173,7 +179,8 @@ void set_actual_temp_flag(void)
 {
     refresh_actual_temp_flag = 1;
 }
-void refresh_actual_temp(void)
+
+static void refresh_actual_temp(void)
 {
     if (refresh_actual_temp_flag)
     {
@@ -181,7 +188,6 @@ void refresh_actual_temp(void)
         GUI_ShowNum(0, 12, actual_temp, 3, 40, 0);
         refresh_actual_temp_flag = 0;
     }
-
 }
 /**
  * @description: 刷新电源电压
@@ -192,7 +198,7 @@ void set_pwr_Volt_flag(void)
 {
     refresh_pwr_Voltage_flag = 1;
 }
-void refresh_pwr_Voltage(void)
+static void refresh_pwr_Voltage(void)
 {
     if (refresh_pwr_Voltage_flag)
     {
@@ -213,9 +219,43 @@ void refresh_pwr_Voltage(void)
  * @description: 显示功率占比
  * @return {*}
  */
-void refresh_pwm_prop(void)
+static void refresh_pwm_prop(void)
 {
     uint16_t pwm_prop = GET_pwm_prop();
     GUI_ShowNum(106, 53, pwm_prop, 3, 12, 0);
     GUI_ShowChar(123, 53, '%', 12, 0);
+}
+
+/**
+ * @description: ui 流程
+ * @return {*}
+ */
+void UI_Main_Process(void)
+{
+    uint8_t ret = 0;
+    switch (main_ui_process)
+    {
+    case PROCESS_INIT:
+        /* 初始化过场动画流程 */
+        ret = Transitions_logo();
+        if (ret)
+        {
+            main_gui_show();
+            main_ui_process = PROCESS_MAIN_UI;
+        }
+        break;
+    case PROCESS_MAIN_UI:
+        /* 主界面ui流程 */
+        refresh_target_temp(); // 刷新目标温度显示
+        refresh_actual_temp(); // 刷新实际温度显示
+        refresh_pwr_Voltage(); // 刷新供电电压显示
+        refresh_pwm_prop();    // 刷新pwm占比显示
+        break;
+    case PROCESS_MENU:
+        /* code */
+        break;
+    default:
+        break;
+    }
+    OLED_Display();
 }
