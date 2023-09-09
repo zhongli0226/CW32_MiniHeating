@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-09 16:41:57
+ * @LastEditTime: 2023-09-09 21:44:57
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -26,18 +26,19 @@
 
 #define TAG "USER_GUI"
 
-#define Temp_step 5       // 温度步进
-#define Temp_upper 420    // 温度上限
-#define Temp_lower 100    // 温度下限
-#define Temp_pwm_high 999 // pwm上限
-#define Temp_pwm_low 0    // pwm下限
+#define Temp_step 5               // 温度步进
+#define Temp_upper 420            // 温度上限
+#define Temp_lower 100            // 温度下限
+#define Temp_demarcation_line 800 // 分界线
+#define Temp_pwm_high 999         // pwm上限
+#define Temp_pwm_low 0            // pwm下限
 
 typedef enum
 {
     PROCESS_INIT_UI = 0,
     PROCESS_MAIN_UI,
     PROCESS_MENU_UI,
-} process_type_t;
+} ui_process_type_t;
 
 typedef struct
 {
@@ -53,7 +54,7 @@ typedef struct
     uint8_t volt_err;            // 电源电压错误
 } gui_flag_type_t;
 
-static process_type_t main_ui_process = PROCESS_INIT_UI; // gui 流程状态
+static ui_process_type_t main_ui_process = PROCESS_INIT_UI; // gui 流程状态
 
 static gui_flag_type_t gui_flag_t = {0}; // gui 相关标记
 
@@ -272,6 +273,29 @@ static void refresh_pwm_prop(void)
 }
 
 /**
+ * @description: 显示logo
+ * @return {*}
+ */
+static void refresh_logo_type(void)
+{
+    if (gui_flag_t.volt_err)
+    {
+        GUI_ShowBMP(65, 27, 24, 24, err_logo, 0);
+        GUI_ShowBMP(90, 36, 28, 14, err_text, 0);
+    }
+    else if (heat_temp_parameter.set_pwm > Temp_demarcation_line)
+    {
+        GUI_ShowBMP(65, 27, 24, 24, rise_temp_logo, 0);
+        GUI_ShowBMP(90, 36, 28, 14, rise_temp_text, 0);
+    }
+    else
+    {
+        GUI_ShowBMP(65, 27, 24, 24, const_temp_logo, 0);
+        GUI_ShowBMP(90, 36, 28, 14, const_temp_text, 0);
+    }
+}
+
+/**
  * @description: ui 流程
  * @return {*}
  */
@@ -291,10 +315,11 @@ void UI_Main_Process(void)
         break;
     case PROCESS_MAIN_UI:
         /* 主界面ui流程 */
-        refresh_target_temp(); // 刷新目标温度显示
-        refresh_actual_temp(); // 刷新实际温度显示
+        refresh_target_temp(); // 刷新目标温度显示    
         refresh_pwr_Voltage(); // 刷新供电电压显示
+        refresh_actual_temp(); // 刷新实际温度显示
         refresh_pwm_prop();    // 刷新pwm占比显示
+        refresh_logo_type();// 刷新logo显示
         break;
     case PROCESS_MENU_UI:
         /* code */

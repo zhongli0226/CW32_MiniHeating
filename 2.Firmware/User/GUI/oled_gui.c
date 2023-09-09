@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 
 #include "oled.h"
 #include "oled_gui.h"
@@ -408,14 +409,14 @@ void GUI_ShowBMP(uint8_t x, uint8_t y, uint8_t px, uint8_t py, const uint8_t *bg
 {
     uint8_t temp, t1;
     uint16_t j, i;
-    uint8_t y0 = 0;
+    uint8_t y0 = y;
 
     if ((x + px > OLED_WIDTH) || (y + py > OLED_HEIGHT))
     {
         elog_w(TAG, "bmp over .....");
         return;
     }
-    i = (px / 2) * (py / 4);
+    i = (uint16_t)(ceil((float)px / 2) * ceil((float)py / 4));
 
     for (j = 0; j < i; j++)
     {
