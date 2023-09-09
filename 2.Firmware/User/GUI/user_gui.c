@@ -4,32 +4,61 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-03 22:57:20
+ * @LastEditTime: 2023-09-09 14:00:44
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
  */
 #include <stdlib.h>
+#include <stdio.h>
+
+#include "cw32f030_atim.h"
+#include "system_cw32f030.h"
 
 #include "oled.h"
 #include "oled_gui.h"
 #include "user_gui.h"
 #include "user_font.h"
-#include "temp_control.h"
-#include "system_cw32f030.h"
+
 #include "adc.h"
 #include "elog.h"
+#include "max6675.h"
 
 #define TAG "USER_GUI"
 
+#define Temp_step 5       // 温度步进
+#define Temp_upper 420    // 温度上限
+#define Temp_lower 100    // 温度下限
+#define Temp_pwm_high 999 // pwm上限
+#define Temp_pwm_low 0    // pwm下限
+
 typedef enum
 {
-    PROCESS_INIT = 0,
+    PROCESS_INIT_UI = 0,
     PROCESS_MAIN_UI,
-    PROCESS_MENU,
+    PROCESS_MENU_UI,
 } process_type_t;
 
-static process_type_t main_ui_process = PROCESS_INIT;
+typedef struct
+{
+    uint16_t target_temp; // 目标温度
+    uint16_t actual_temp; // 实际温度
+    int16_t set_pwm;      // 设置的pwm
+} temp_type_t;
+
+typedef struct
+{
+    uint8_t refresh_actual_temp; // 刷新实际温度
+    uint8_t refresh_voltage;     // 刷新电源电压
+    uint8_t volt_err;            // 电源电压错误
+} gui_flag_type_t;
+
+static process_type_t main_ui_process = PROCESS_INIT_UI; // gui 流程状态
+
+static gui_flag_type_t gui_flag_t = {0}; // gui 相关标记
+
+static temp_type_t heat_temp_parameter = {300, 0, 999}; // 初始化目标温度为300
+
 /**
  * @description: 刷新全屏背景图片
  * @param {uint8_t*} bg 背景图片地址
@@ -161,12 +190,38 @@ static void main_gui_show(void)
 }
 
 /**
+ * @description: 设定温度向上提高一个步进
+ * @return {*}
+ */
+void target_temp_step_up(void)
+{
+    heat_temp_parameter.target_temp += Temp_step;
+    if (heat_temp_parameter.target_temp > Temp_upper)
+    {
+        heat_temp_parameter.target_temp = Temp_upper;
+    }
+}
+
+/**
+ * @description: 设定温度向下降低一个步进
+ * @return {*}
+ */
+void target_temp_step_down(void)
+{
+    heat_temp_parameter.target_temp -= Temp_step;
+    if (heat_temp_parameter.target_temp < Temp_lower)
+    {
+        heat_temp_parameter.target_temp = Temp_lower;
+    }
+}
+
+/**
  * @description: 刷新目标温度
  * @return {*}
  */
 static void refresh_target_temp(void)
 {
-    uint16_t target_temp = Get_target_temp();
+    uint16_t target_temp = heat_temp_parameter.target_temp;
     GUI_ShowNum(3, 53, target_temp, 3, 12, 0);
 }
 
@@ -174,54 +229,79 @@ static void refresh_target_temp(void)
  * @description: 刷新实际温度
  * @return {*}
  */
-static uint8_t refresh_actual_temp_flag = 0;
 void set_actual_temp_flag(void)
 {
-    refresh_actual_temp_flag = 1;
+    gui_flag_t.refresh_actual_temp = 1;
 }
 
 static void refresh_actual_temp(void)
 {
-    if (refresh_actual_temp_flag)
+    if (!gui_flag_t.volt_err)
     {
-        uint16_t actual_temp = Get_actual_temp();
-        GUI_ShowNum(0, 12, actual_temp, 3, 40, 0);
-        refresh_actual_temp_flag = 0;
+        if (gui_flag_t.refresh_actual_temp)
+        {
+            heat_temp_parameter.actual_temp = MAX6675_Read();
+            GUI_ShowNum(0, 12, heat_temp_parameter.actual_temp, 3, 40, 0);
+            gui_flag_t.refresh_actual_temp = 0;
+        }
+    }
+    else
+    {
+        // 电压异常显示错误
+        if (gui_flag_t.refresh_actual_temp)
+        {
+            GUI_ShowString(0, 12, "ERR", 40, 0);
+            gui_flag_t.refresh_actual_temp = 0;
+        }
     }
 }
 /**
  * @description: 刷新电源电压
  * @return {*}
  */
-static uint8_t refresh_pwr_Voltage_flag = 0;
-void set_pwr_Volt_flag(void)
+void set_pwr_volt_flag(void)
 {
-    refresh_pwr_Voltage_flag = 1;
+    gui_flag_t.refresh_voltage = 1;
 }
 static void refresh_pwr_Voltage(void)
 {
-    if (refresh_pwr_Voltage_flag)
+    if (gui_flag_t.refresh_voltage)
     {
         float Voltage = GET_PWR_Value();
-        // elog_i(TAG, "pwr:%f", Voltage);
-
+        // elog_i(TAG, "pwr:%d", (uint16_t)Voltage);
+        if (Voltage < 20)
+        {
+            // 检测到电压异常
+            gui_flag_t.volt_err = 1;
+        }
         uint16_t Voltage_int = (uint16_t)Voltage;
         uint16_t Voltage_float = (uint16_t)((Voltage_int * 10) % 10);
         GUI_ShowNum(98, 0, Voltage_int, 2, 12, 1);
         GUI_ShowChar(110, 0, '.', 12, 1);
         GUI_ShowNum(116, 0, Voltage_float, 1, 12, 1);
         GUI_ShowChar(122, 0, 'V', 12, 1);
-        refresh_pwr_Voltage_flag = 0;
+        gui_flag_t.refresh_voltage = 0;
     }
 }
 
 /**
- * @description: 显示功率占比
+ * @description: 调整和显示功率占比
  * @return {*}
  */
 static void refresh_pwm_prop(void)
 {
-    uint16_t pwm_prop = GET_pwm_prop();
+    // 上下限处理
+    if (heat_temp_parameter.set_pwm > Temp_pwm_high)
+    {
+        heat_temp_parameter.set_pwm = Temp_pwm_high;
+    }
+    else if (heat_temp_parameter.set_pwm < Temp_pwm_low)
+    {
+        heat_temp_parameter.set_pwm = Temp_pwm_low;
+    }
+    // 调整pwm
+    ATIM_SetCompare1B(heat_temp_parameter.set_pwm);
+    uint16_t pwm_prop = (heat_temp_parameter.set_pwm * 100) / 999;
     GUI_ShowNum(106, 53, pwm_prop, 3, 12, 0);
     GUI_ShowChar(123, 53, '%', 12, 0);
 }
@@ -235,7 +315,7 @@ void UI_Main_Process(void)
     uint8_t ret = 0;
     switch (main_ui_process)
     {
-    case PROCESS_INIT:
+    case PROCESS_INIT_UI:
         /* 初始化过场动画流程 */
         ret = Transitions_logo();
         if (ret)
@@ -251,7 +331,7 @@ void UI_Main_Process(void)
         refresh_pwr_Voltage(); // 刷新供电电压显示
         refresh_pwm_prop();    // 刷新pwm占比显示
         break;
-    case PROCESS_MENU:
+    case PROCESS_MENU_UI:
         /* code */
         break;
     default:

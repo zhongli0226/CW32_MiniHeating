@@ -75,7 +75,7 @@ void GUI_ShowChar(uint8_t x, uint8_t y, uint8_t chr, uint8_t size, uint8_t mode)
  * @param {uint8_t} mode:   0：白色背景和黑色字符   1：黑色背景和白色字符
  * @return {*}
  */
-void GUI_ShowString(uint8_t x, uint8_t y, const uint8_t *p, uint8_t size, uint8_t mode);
+void GUI_ShowString(uint8_t x, uint8_t y, const char *p, uint8_t size, uint8_t mode);
 
 /**
  * @description: oled 显示数字

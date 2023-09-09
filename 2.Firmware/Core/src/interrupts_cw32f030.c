@@ -325,14 +325,14 @@ void BTIM1_IRQHandler(void)
     if (BTIM_GetITStatus(CW_BTIM1, BTIM_IT_OV))
     {
         //处理按键信号
-        button_ticks();
+        button_ticks();//  5ms 按键回调
         time_flag_1s++;
         if (time_flag_1s == 200)//1s
         {
             time_flag_1s = 0;
-            set_pwr_Volt_flag();
-            set_actual_temp_flag();
-            ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换
+            set_pwr_volt_flag();// 1s 获得一次电源ad码值
+            set_actual_temp_flag();// 1s 获得一次实际温度
+            ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换 1s开启一次ad转换
         }
         BTIM_ClearITPendingBit(CW_BTIM1, BTIM_IT_OV);
     }

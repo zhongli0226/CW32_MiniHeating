@@ -3,7 +3,7 @@
 #include "cw32f030_rcc.h"
 
 #include "multi_button.h"
-#include "temp_control.h"
+#include "user_gui.h"
 #include "ec11.h"
 #include "elog.h"
 
