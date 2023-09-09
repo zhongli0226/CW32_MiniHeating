@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-09 14:00:44
+ * @LastEditTime: 2023-09-09 16:41:57
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -58,41 +58,6 @@ static process_type_t main_ui_process = PROCESS_INIT_UI; // gui 流程状态
 static gui_flag_type_t gui_flag_t = {0}; // gui 相关标记
 
 static temp_type_t heat_temp_parameter = {300, 0, 999}; // 初始化目标温度为300
-
-/**
- * @description: 刷新全屏背景图片
- * @param {uint8_t*} bg 背景图片地址
- * @param {uint8_t} mode 0：白色背景和黑色字符   1：黑色背景和白色字符
- * @return {*}
- */
-static void Show_fullscreen_bg(const uint8_t *bg, uint8_t mode)
-{
-    uint8_t temp, t1;
-    uint16_t j, i;
-    uint8_t y = 0, y0 = 0, x = 0;
-
-    i = (OLED_WIDTH / 2) * (OLED_HEIGHT / 4);
-
-    for (j = 0; j < i; j++)
-    {
-        temp = bg[j]; // 调用图片
-        for (t1 = 0; t1 < 8; t1++)
-        {
-            if (temp & 0x80)
-                GUI_DrawPoint(x, y, mode);
-            else
-                GUI_DrawPoint(x, y, !mode);
-            temp <<= 1;
-            y++;
-            if ((y - y0) == OLED_HEIGHT)
-            {
-                y = y0;
-                x++;
-                break;
-            }
-        }
-    }
-}
 
 static int32_t disapper_temp = 0;
 static int32_t come_temp = 8;
@@ -150,8 +115,8 @@ static uint8_t come_flag = 0;
 static uint8_t Transitions_logo(void)
 {
     uint8_t anim_state = 0;
-    OLED_Clear();                            // 清除内部缓冲区
-    Show_fullscreen_bg(MiniHeating_logo, 0); // 第一段输出位置
+    OLED_Clear();                                                    // 清除内部缓冲区
+    GUI_ShowBMP(0, 0, OLED_WIDTH, OLED_HEIGHT, MiniHeating_logo, 0); // 第一段输出位置
     if (disapper_flag == 1)
     {
         if (ui_disapper() == 0)
@@ -167,7 +132,7 @@ static uint8_t Transitions_logo(void)
         {
             disapper_flag = 1;
             come_flag = 1;
-            Show_fullscreen_bg(MiniHeating_logo, 0);
+            GUI_ShowBMP(0, 0, OLED_WIDTH, OLED_HEIGHT, MiniHeating_logo, 0);
         }
     }
     OLED_Display(); // transfer internal memory to the display
@@ -178,15 +143,6 @@ static uint8_t Transitions_logo(void)
     }
     delay1ms(100);
     return anim_state;
-}
-
-/**
- * @description: 主界面背景显示
- * @return {*}
- */
-static void main_gui_show(void)
-{
-    Show_fullscreen_bg(main_ui_bg, 0);
 }
 
 /**
@@ -274,6 +230,10 @@ static void refresh_pwr_Voltage(void)
             // 检测到电压异常
             gui_flag_t.volt_err = 1;
         }
+        else
+        {
+            gui_flag_t.volt_err = 0;
+        }
         uint16_t Voltage_int = (uint16_t)Voltage;
         uint16_t Voltage_float = (uint16_t)((Voltage_int * 10) % 10);
         GUI_ShowNum(98, 0, Voltage_int, 2, 12, 1);
@@ -291,6 +251,11 @@ static void refresh_pwr_Voltage(void)
 static void refresh_pwm_prop(void)
 {
     // 上下限处理
+    if (gui_flag_t.volt_err)
+    {
+        // 出现异常不加热
+        heat_temp_parameter.set_pwm = 0;
+    }
     if (heat_temp_parameter.set_pwm > Temp_pwm_high)
     {
         heat_temp_parameter.set_pwm = Temp_pwm_high;
@@ -320,7 +285,7 @@ void UI_Main_Process(void)
         ret = Transitions_logo();
         if (ret)
         {
-            main_gui_show();
+            GUI_ShowBMP(0, 0, OLED_WIDTH, OLED_HEIGHT, main_ui_bg, 0);
             main_ui_process = PROCESS_MAIN_UI;
         }
         break;

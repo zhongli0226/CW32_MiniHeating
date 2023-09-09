@@ -20,7 +20,11 @@ void GUI_DrawPoint(uint8_t x, uint8_t y, uint8_t color)
     uint8_t pos, bx, temp = 0;
     uint8_t *p = Get_OLEDBuffer();
     if (x > 131 || y > 63)
+    {
+        elog_w(TAG, "Out of range.........");
         return; // 超出范围了.
+    }
+
     pos = 7 - y / 8;
     bx = y % 8;
     temp = 1 << (7 - bx);
@@ -290,7 +294,7 @@ void GUI_ShowChar(uint8_t x, uint8_t y, uint8_t chr, uint8_t size, uint8_t mode)
                 temp = oled_asc2_4020[10][t]; // 调用4020字体
             else if ((chr + ' ') == 'R')
                 temp = oled_asc2_4020[11][t]; // 调用4020字体
-            else 
+            else
                 return;
         }
         else
@@ -387,5 +391,49 @@ void GUI_ShowNum(uint8_t x, uint8_t y, uint32_t num, uint8_t len, uint8_t size, 
                 enshow = 1;
         }
         GUI_ShowChar(x + (size / 2) * t, y, temp + '0', size, mode);
+    }
+}
+
+/**
+ * @description: 画一个图片
+ * @param {uint8_t} x:  图片的起始x坐标
+ * @param {uint8_t} y:  图片的起始y坐标
+ * @param {uint8_t} px：图片的x长度
+ * @param {uint8_t} py：图片的y长度
+ * @param {uint8_t} *bg 图片buff地址
+ * @param {uint8_t} mode 0：白色背景和黑色字符   1：黑色背景和白色字符
+ * @return {*}
+ */
+void GUI_ShowBMP(uint8_t x, uint8_t y, uint8_t px, uint8_t py, const uint8_t *bg, uint8_t mode)
+{
+    uint8_t temp, t1;
+    uint16_t j, i;
+    uint8_t y0 = 0;
+
+    if ((x + px > OLED_WIDTH) || (y + py > OLED_HEIGHT))
+    {
+        elog_w(TAG, "bmp over .....");
+        return;
+    }
+    i = (px / 2) * (py / 4);
+
+    for (j = 0; j < i; j++)
+    {
+        temp = bg[j]; // 调用图片
+        for (t1 = 0; t1 < 8; t1++)
+        {
+            if (temp & 0x80)
+                GUI_DrawPoint(x, y, mode);
+            else
+                GUI_DrawPoint(x, y, !mode);
+            temp <<= 1;
+            y++;
+            if ((y - y0) == py)
+            {
+                y = y0;
+                x++;
+                break;
+            }
+        }
     }
 }

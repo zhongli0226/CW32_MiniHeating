@@ -89,4 +89,17 @@ void GUI_ShowString(uint8_t x, uint8_t y, const char *p, uint8_t size, uint8_t m
  */
 void GUI_ShowNum(uint8_t x, uint8_t y, uint32_t num, uint8_t len, uint8_t size, uint8_t mode);
 
+
+/**
+ * @description: 画一个图片
+ * @param {uint8_t} x:  图片的起始x坐标
+ * @param {uint8_t} y:  图片的起始y坐标
+ * @param {uint8_t} px：图片的x长度
+ * @param {uint8_t} py：图片的y长度
+ * @param {uint8_t} *bg 图片buff地址
+ * @param {uint8_t} mode 0：白色背景和黑色字符   1：黑色背景和白色字符
+ * @return {*}
+ */
+void GUI_ShowBMP(uint8_t x, uint8_t y, uint8_t px, uint8_t py, const uint8_t *bg, uint8_t mode);
+
 #endif
