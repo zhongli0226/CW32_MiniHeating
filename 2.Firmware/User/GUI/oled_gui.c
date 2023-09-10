@@ -22,7 +22,7 @@ void GUI_DrawPoint(uint8_t x, uint8_t y, uint8_t color)
     uint8_t *p = Get_OLEDBuffer();
     if (x > 131 || y > 63)
     {
-        elog_w(TAG, "Out of range.........");
+        // elog_w(TAG, "Out of range.........");
         return; // 超出范围了.
     }
 

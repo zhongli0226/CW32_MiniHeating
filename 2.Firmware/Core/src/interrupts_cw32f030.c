@@ -332,6 +332,7 @@ void BTIM1_IRQHandler(void)
             time_flag_1s = 0;
             set_pwr_volt_flag();// 1s 获得一次电源ad码值
             set_actual_temp_flag();// 1s 获得一次实际温度
+            set_flash_update_flag();// 1s 查询下离线记录数据
             ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换 1s开启一次ad转换
         }
         BTIM_ClearITPendingBit(CW_BTIM1, BTIM_IT_OV);

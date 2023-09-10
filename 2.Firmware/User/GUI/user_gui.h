@@ -16,6 +16,12 @@ void set_actual_temp_flag(void);
 void set_pwr_volt_flag(void);
 
 /**
+ * @description: flash更新
+ * @return {*}
+ */
+void set_flash_update_flag(void);
+
+/**
  * @description: 设定温度向上提高一个步进
  * @return {*}
  */

@@ -29,6 +29,9 @@
         "oled.h": "c",
         "stdint.h": "c",
         "user_gui.h": "c",
-        "btimer.h": "c"
+        "btimer.h": "c",
+        "cw32f030_flash.h": "c",
+        "cw32f030.h": "c",
+        "flash.h": "c"
     }
 }

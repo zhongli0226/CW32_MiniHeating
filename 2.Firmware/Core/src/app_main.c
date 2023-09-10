@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-07-28 13:46:14
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-03 22:58:15
+ * @LastEditTime: 2023-09-10 17:21:22
  * @FilePath: \2.Firmware\Core\src\app_main.c
  * 
  *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
@@ -37,7 +37,7 @@ typedef struct
 
 const AppInfo_t sg_tAppInfo =
 {
-    "MiniHeating_V0.1.0",
+    "MiniHeating_V0.5.0",
     __DATE__,
     __TIME__,
 };
