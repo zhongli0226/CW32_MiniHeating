@@ -4,13 +4,14 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-10 18:09:17
+ * @LastEditTime: 2023-09-16 15:23:38
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
  */
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "cw32f030_atim.h"
 #include "system_cw32f030.h"
@@ -36,6 +37,11 @@
 
 #define USER_FLASH_ADDR 0x0000FE00          // 用户配置FLASH地址
 #define USER_CONFIG_SECTOR FLASH_Sector_127 // 用户配置FLSHA扇叶
+
+#define Default_SET_TEMP 300 // 默认设定温度
+#define Default_SET_PID_P 10 // 默认设定 P
+#define Default_SET_PID_I 0  // 默认设定 I
+#define Default_SET_PID_D 0  // 默认设定 D
 typedef enum
 {
     PROCESS_INIT_UI = 0,
@@ -43,6 +49,7 @@ typedef enum
     PROCESS_MENU_UI,
 } ui_process_type_t;
 
+// 温度显示相关参数
 typedef struct
 {
     uint8_t refresh_actual_temp; // 刷新实际温度
@@ -51,8 +58,9 @@ typedef struct
     uint8_t volt_err;            // 电源电压错误
     uint8_t flash_update;        // FLASH刷新
     int16_t set_pwm;             // 设置的pwm
-} user_temp_type_t;
+} user_ui_temp_type_t;
 
+// 温度控制参数
 typedef struct
 {
     uint16_t target_temp; // 目标温度
@@ -71,14 +79,24 @@ typedef struct
         float D;          // D值
         uint32_t D_value; //
     } union_D;
-} control_temp_type_t;
+
+} offline_data_type_t;
+
+typedef struct
+{
+    int16_t new_err;  // 新误差
+    int16_t last_err; // 旧误差
+    int16_t err_sum;  // 误差和
+    int16_t pid_out;  // pid计算结果
+} pid_temp_type_t;
 
 static ui_process_type_t main_ui_process = PROCESS_INIT_UI; // gui 流程状态
 
-static user_temp_type_t user_temp_para = {0}; // 用户参数初始化均为0
+static user_ui_temp_type_t user_temp_para = {0}; // 用户参数初始化均为0
 
-static control_temp_type_t control_temp_para = {0}; //  控制参数由flash初始化
+static offline_data_type_t control_temp_para = {0}; //  控制参数由flash初始化
 
+static pid_temp_type_t temp_control_para = {0}; // 温度pid计算中间量
 /**
  * @description:用户config 数据初始化
  * @return {*}
@@ -90,25 +108,25 @@ static void user_parameter_init(void)
     if (control_temp_para.target_temp == 0xFFFF)
     {
         // 刚出厂 默认为300
-        control_temp_para.target_temp = 300;
+        control_temp_para.target_temp = Default_SET_TEMP;
         Flash_write(USER_FLASH_ADDR, (uint8_t *)&control_temp_para, sizeof(control_temp_para));
     }
     if (control_temp_para.union_P.P_value == 0xFFFFFFFF)
     {
         // 刚出厂 默认为1.5
-        control_temp_para.union_P.P = 1.5;
+        control_temp_para.union_P.P = Default_SET_PID_P;
         Flash_write(USER_FLASH_ADDR, (uint8_t *)&control_temp_para, sizeof(control_temp_para));
     }
     if (control_temp_para.union_I.I_value == 0xFFFFFFFF)
     {
         // 刚出厂 默认为1.5
-        control_temp_para.union_I.I = 1.5;
+        control_temp_para.union_I.I = Default_SET_PID_I;
         Flash_write(USER_FLASH_ADDR, (uint8_t *)&control_temp_para, sizeof(control_temp_para));
     }
     if (control_temp_para.union_D.D_value == 0xFFFFFFFF)
     {
         // 刚出厂 默认为1.5
-        control_temp_para.union_D.D = 1.5;
+        control_temp_para.union_D.D = Default_SET_PID_D;
         Flash_write(USER_FLASH_ADDR, (uint8_t *)&control_temp_para, sizeof(control_temp_para));
     }
     elog_i(TAG, "control_temp_para.target_temp = %d", control_temp_para.target_temp);
@@ -312,7 +330,7 @@ static void updata_user_parameter(void)
 {
     if (user_temp_para.flash_update)
     {
-        control_temp_type_t old_user_data;
+        offline_data_type_t old_user_data;
         Flash_read(USER_FLASH_ADDR, (uint8_t *)&old_user_data, sizeof(old_user_data));
         if (old_user_data.target_temp != control_temp_para.target_temp)
         {
@@ -321,7 +339,6 @@ static void updata_user_parameter(void)
         }
         user_temp_para.flash_update = 0;
     }
-    
 }
 
 /**
@@ -376,11 +393,53 @@ static void refresh_logo_type(void)
 }
 
 /**
- * @description:
+ * @description: 温度控制
  * @return {*}
  */
 static void const_temp_control(void)
 {
+    uint16_t err_diff;
+    float I_out;
+    temp_control_para.new_err = control_temp_para.target_temp - user_temp_para.actual_temp; // 误差
+    err_diff = temp_control_para.new_err - temp_control_para.last_err;
+
+    temp_control_para.err_sum += temp_control_para.new_err; // 偏差之和
+
+    // 计算PID的比例和微分输出
+    temp_control_para.pid_out = control_temp_para.union_P.P * temp_control_para.new_err + control_temp_para.union_D.D * err_diff;
+
+    if (fabs(temp_control_para.new_err) < 5) // 如果温度相差小于3度则计入PID积分输出
+    {
+
+        if (temp_control_para.err_sum > 500)
+            temp_control_para.err_sum = 500;
+        if (temp_control_para.err_sum < -500)
+            temp_control_para.err_sum = -500; // 防止积分过大
+
+        I_out = control_temp_para.union_I.I * temp_control_para.err_sum; // 积分输出
+
+        temp_control_para.pid_out += I_out;
+    }
+    else
+    {
+        temp_control_para.err_sum = 0;
+    }
+
+    if (temp_control_para.pid_out > 999)
+        temp_control_para.pid_out = 999;
+    if (temp_control_para.pid_out < 0)
+        temp_control_para.pid_out = 0;
+
+    if (temp_control_para.new_err > 10) // 温差超过10直接拉满
+        temp_control_para.pid_out = 999;
+
+    if (temp_control_para.new_err < 4) // 温差小于4 直接消除不调了
+        temp_control_para.pid_out = 0;
+
+    // 更新pwm
+    user_temp_para.set_pwm = temp_control_para.pid_out;
+    // 温差更新
+    temp_control_para.last_err = temp_control_para.new_err;
 }
 /**
  * @description: ui 流程
@@ -403,11 +462,12 @@ void UI_Main_Process(void)
         break;
     case PROCESS_MAIN_UI:
         /* 主界面ui流程 */
-        refresh_target_temp(); // 刷新目标温度显示
-        refresh_pwr_Voltage(); // 刷新供电电压显示
-        refresh_actual_temp(); // 刷新实际温度显示
-        refresh_pwm_prop();    // 刷新pwm占比显示
-        refresh_logo_type();   // 刷新logo显示
+        refresh_target_temp();   // 刷新目标温度显示
+        refresh_pwr_Voltage();   // 刷新供电电压显示
+        refresh_actual_temp();   // 刷新实际温度显示
+        const_temp_control();    // 温度控制pid
+        refresh_pwm_prop();      // 刷新pwm占比显示
+        refresh_logo_type();     // 刷新logo显示
         updata_user_parameter(); // 更新flash中目标温度
         break;
     case PROCESS_MENU_UI:
@@ -416,7 +476,6 @@ void UI_Main_Process(void)
     default:
         break;
     }
-    
+
     OLED_Display();
-    
 }

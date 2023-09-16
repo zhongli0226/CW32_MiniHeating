@@ -319,6 +319,7 @@ void GTIM4_IRQHandler(void)
  * @brief This funcation handles BTIM1
  */
 static uint16_t time_flag_1s = 0;
+static uint16_t time_flag_5s = 0;
 void BTIM1_IRQHandler(void)
 {
     /* USER CODE BEGIN */
@@ -327,13 +328,17 @@ void BTIM1_IRQHandler(void)
         //处理按键信号
         button_ticks();//  5ms 按键回调
         time_flag_1s++;
+        time_flag_5s++;
         if (time_flag_1s == 200)//1s
         {
             time_flag_1s = 0;
             set_pwr_volt_flag();// 1s 获得一次电源ad码值
-            set_actual_temp_flag();// 1s 获得一次实际温度
-            set_flash_update_flag();// 1s 查询下离线记录数据
+            set_actual_temp_flag();// 1s 获得一次实际温度  
             ADC_SoftwareStartConvCmd(ENABLE);	//启动下一次adc转换 1s开启一次ad转换
+        }
+        if (time_flag_5s == 1000)//5s
+        {
+            set_flash_update_flag();// 1s 查询下离线记录数据
         }
         BTIM_ClearITPendingBit(CW_BTIM1, BTIM_IT_OV);
     }
