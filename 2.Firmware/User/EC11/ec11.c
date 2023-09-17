@@ -9,9 +9,9 @@
 
 #define TAG "EC11"
 
-#define EC11_A GPIO_PIN_8       //PB8
-#define EC11_B GPIO_PIN_9       //PB9 
-#define EC11_KEY GPIO_PIN_7     //PB7
+#define EC11_A GPIO_PIN_8   // PB8
+#define EC11_B GPIO_PIN_9   // PB9
+#define EC11_KEY GPIO_PIN_7 // PB7
 
 enum Button_IDs
 {
@@ -58,14 +58,17 @@ static void button_callback(void *button)
 
     case SINGLE_CLICK:
         elog_i(TAG, "---> key1 single click! <---");
+        set_key_flag(SINGLE_FLAG);
         break;
 
     case DOUBLE_CLICK:
         elog_i(TAG, "***> key1 double click! <***");
+        set_key_flag(DOUBLE_FLAG);
         break;
 
     case LONG_PRESS_START:
         elog_i(TAG, "---> key1 long press start! <---");
+        set_key_flag(LONG_FLAG);
         break;
 
     // case LONG_PRESS_HOLD:
@@ -136,12 +139,12 @@ void EC11_HandlerCallBack(void)
             EC11_2_flag = !blv; // 取反是因为 alv,blv必然异步，一高一低。
             if (EC11_1_flag && EC11_2_flag)
             {
-                target_temp_step_down();
+                set_key_flag(RIGHT_FLAG);
                 // elog_i(TAG, "right on");
             }
             if (EC11_1_flag == 0 && EC11_2_flag == 0)
             {
-                target_temp_step_up();
+                set_key_flag(LEFT_FLAG);
                 // elog_i(TAG, "left on");
             }
             EC11_flag = 0;

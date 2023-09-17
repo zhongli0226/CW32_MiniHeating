@@ -1,10 +1,10 @@
 /*
- * @Description: gui 刷新函数
+ * @Description: gui
  * @Version:
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-16 15:23:38
+ * @LastEditTime: 2023-09-17 22:19:33
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -42,6 +42,7 @@
 #define Default_SET_PID_P 10 // 默认设定 P
 #define Default_SET_PID_I 0  // 默认设定 I
 #define Default_SET_PID_D 0  // 默认设定 D
+
 typedef enum
 {
     PROCESS_INIT_UI = 0,
@@ -90,6 +91,13 @@ typedef struct
     int16_t pid_out;  // pid计算结果
 } pid_temp_type_t;
 
+
+typedef struct
+{
+  char* str;
+  uint8_t len;
+}menu_list_type_t;
+
 static ui_process_type_t main_ui_process = PROCESS_INIT_UI; // gui 流程状态
 
 static user_ui_temp_type_t user_temp_para = {0}; // 用户参数初始化均为0
@@ -97,6 +105,33 @@ static user_ui_temp_type_t user_temp_para = {0}; // 用户参数初始化均为0
 static offline_data_type_t control_temp_para = {0}; //  控制参数由flash初始化
 
 static pid_temp_type_t temp_control_para = {0}; // 温度pid计算中间量
+
+static uint8_t key_flag[NUM_FLAG_T] = {0}; // 按键事件flag
+
+static menu_list_type_t menu_list[] = 
+{
+    {"SET PID", 8},
+    {"Version", 8},
+    {"To be add",10},
+    {"To be add",10},
+    {"To be add",10},
+};
+
+/**
+ * @description: 设置key外部事件标志flag
+ * @param {key_flag_type_t} flag:
+ * @return {*}
+ */
+void set_key_flag(key_flag_type_t flag)
+{
+    if (flag > LEFT_FLAG)
+    {
+        elog_w(TAG, "set_key_flag error!");
+        return;
+    }
+    key_flag[flag] = 1;
+}
+
 /**
  * @description:用户config 数据初始化
  * @return {*}
@@ -139,7 +174,7 @@ static int32_t come_temp = 8;
  * @description:  logo 消失接口
  * @return {*} 0：正在消失，1：消失完成
  */
-static uint32_t ui_disapper(void)
+static uint32_t logo_ui_disapper(void)
 {
     uint32_t len = sizeof(MiniHeating_logo) / sizeof(MiniHeating_logo[0]);
     uint8_t *p = Get_OLEDBuffer();
@@ -161,7 +196,7 @@ static uint32_t ui_disapper(void)
  * @description:  logo 显示接口
  * @return {*}0：正在显示，1：显示完成
  */
-static uint32_t ui_come(void)
+static uint32_t logo_ui_come(void)
 {
     uint32_t len = sizeof(MiniHeating_logo) / sizeof(MiniHeating_logo[0]);
     uint8_t *p = Get_OLEDBuffer();
@@ -193,7 +228,7 @@ static uint8_t Transitions_logo(void)
     GUI_ShowBMP(0, 0, OLED_WIDTH, OLED_HEIGHT, MiniHeating_logo, 0); // 第一段输出位置
     if (disapper_flag == 1)
     {
-        if (ui_disapper() == 0)
+        if (logo_ui_disapper() == 0)
         {
             disapper_flag = 0;
             anim_state = 1;
@@ -202,7 +237,7 @@ static uint8_t Transitions_logo(void)
     }
     else
     {
-        if (ui_come() == 0)
+        if (logo_ui_come() == 0)
         {
             disapper_flag = 1;
             come_flag = 1;
@@ -219,31 +254,6 @@ static uint8_t Transitions_logo(void)
     return anim_state;
 }
 
-/**
- * @description: 目标温度向上提高一个步进
- * @return {*}
- */
-void target_temp_step_up(void)
-{
-    control_temp_para.target_temp += Temp_step;
-    if (control_temp_para.target_temp > Temp_upper)
-    {
-        control_temp_para.target_temp = Temp_upper;
-    }
-}
-
-/**
- * @description: 目标温度向下降低一个步进
- * @return {*}
- */
-void target_temp_step_down(void)
-{
-    control_temp_para.target_temp -= Temp_step;
-    if (control_temp_para.target_temp < Temp_lower)
-    {
-        control_temp_para.target_temp = Temp_lower;
-    }
-}
 
 /**
  * @description: 刷新目标温度
@@ -251,6 +261,26 @@ void target_temp_step_down(void)
  */
 static void refresh_target_temp(void)
 {
+    if (key_flag[RIGHT_FLAG])
+    {
+        control_temp_para.target_temp -= Temp_step;
+        if (control_temp_para.target_temp < Temp_lower)
+        {
+            control_temp_para.target_temp = Temp_lower;
+        }
+        key_flag[RIGHT_FLAG] = 0;
+    }
+    
+    if (key_flag[LEFT_FLAG])
+    {
+        control_temp_para.target_temp += Temp_step;
+        if (control_temp_para.target_temp > Temp_upper)
+        {
+            control_temp_para.target_temp = Temp_upper;
+        }
+        key_flag[LEFT_FLAG] = 0;
+    }
+
     GUI_ShowNum(3, 53, control_temp_para.target_temp, 3, 12, 0);
 }
 
@@ -441,6 +471,9 @@ static void const_temp_control(void)
     // 温差更新
     temp_control_para.last_err = temp_control_para.new_err;
 }
+
+
+
 /**
  * @description: ui 流程
  * @return {*}
