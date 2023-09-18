@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-17 22:19:33
+ * @LastEditTime: 2023-09-18 23:01:32
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -59,6 +59,7 @@ typedef struct
     uint8_t volt_err;            // 电源电压错误
     uint8_t flash_update;        // FLASH刷新
     int16_t set_pwm;             // 设置的pwm
+    uint8_t heating_flag;        // 加热标志
 } user_ui_temp_type_t;
 
 // 温度控制参数
@@ -377,10 +378,14 @@ static void updata_user_parameter(void)
  */
 static void refresh_pwm_prop(void)
 {
-    // 异常判断
-    if (user_temp_para.volt_err)
+    if(key_flag[SINGLE_FLAG])
     {
-        // 出现异常不加热
+        user_temp_para.heating_flag = !user_temp_para.heating_flag;
+        key_flag[SINGLE_FLAG] = 0;
+    }
+    if (user_temp_para.volt_err || (!user_temp_para.heating_flag)) // 异常或者加热标记未置起
+    {
+        // 不加热
         user_temp_para.set_pwm = 0;
     }
     // 上下限处理
