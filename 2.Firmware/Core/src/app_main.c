@@ -89,6 +89,7 @@ int main(void)
     while (1)
     {   
         UI_Main_Process();// ui 流程
+        key_Main_process();// key流程
         // delay1ms(500);
     }
     return 0;

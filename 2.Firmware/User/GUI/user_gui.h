@@ -56,4 +56,10 @@ void set_flash_update_flag(void);
  */
 void UI_Main_Process(void);
 
+/**
+ * @description: key 主流程
+ * @return {*}
+ */
+void key_Main_process(void);
+
 #endif
