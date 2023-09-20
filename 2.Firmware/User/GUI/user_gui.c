@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-19 22:00:08
+ * @LastEditTime: 2023-09-20 23:49:09
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -50,7 +50,7 @@ typedef enum
     PROCESS_MENU_UI,
 } ui_process_type_t;
 
-// 温度显示相关参数
+// 主界面显示相关参数
 typedef struct
 {
     uint8_t refresh_actual_temp; // 刷新实际温度
@@ -60,7 +60,20 @@ typedef struct
     uint8_t flash_update;        // FLASH刷新
     int16_t set_pwm;             // 设置的pwm
     uint8_t heating_flag;        // 加热标志
-} user_ui_temp_type_t;
+} user_main_ui_type_t;
+
+typedef struct
+{
+    char *str;
+    uint8_t len;
+} menu_list_type_t;
+
+// 菜单界面显示相关参数
+typedef struct
+{
+    uint8_t x_now;// 当前x位置
+    uint8_t x_tag;// 目标x位置
+} user_menu_ui_type_t;
 
 // 温度控制参数
 typedef struct
@@ -92,15 +105,9 @@ typedef struct
     int16_t pid_out;  // pid计算结果
 } pid_temp_type_t;
 
-typedef struct
-{
-    char *str;
-    uint8_t len;
-} menu_list_type_t;
-
 static ui_process_type_t main_ui_process = PROCESS_INIT_UI; // gui 流程状态
 
-static user_ui_temp_type_t user_temp_para = {0}; // 用户参数初始化均为0
+static user_main_ui_type_t user_main_para = {0}; // 用户主界面参数初始化均为0
 
 static offline_data_type_t control_temp_para = {0}; //  控制参数由flash初始化
 
@@ -116,6 +123,8 @@ static menu_list_type_t menu_list[] = {
     {"To be add", 10},
 };
 
+static user_menu_ui_type_t user_menu_para = {0}; // 用户菜单界面参数
+
 /**
  * @description: 设置key外部事件标志flag
  * @param {key_flag_type_t} flag:
@@ -130,7 +139,6 @@ void set_key_flag(key_flag_type_t flag)
     }
     key_flag[flag] = 1;
 }
-
 
 /**
  * @description:用户config 数据初始化
@@ -254,14 +262,13 @@ static uint8_t Transitions_logo(void)
     return anim_state;
 }
 
-
 /**
  * @description: 实际温度刷新标记
  * @return {*}
  */
 void set_actual_temp_flag(void)
 {
-    user_temp_para.refresh_actual_temp = 1;
+    user_main_para.refresh_actual_temp = 1;
 }
 
 /**
@@ -270,7 +277,7 @@ void set_actual_temp_flag(void)
  */
 void set_pwr_volt_flag(void)
 {
-    user_temp_para.refresh_voltage = 1;
+    user_main_para.refresh_voltage = 1;
 }
 
 /**
@@ -279,7 +286,7 @@ void set_pwr_volt_flag(void)
  */
 void set_flash_update_flag(void)
 {
-    user_temp_para.flash_update = 1;
+    user_main_para.flash_update = 1;
 }
 
 /**
@@ -288,7 +295,7 @@ void set_flash_update_flag(void)
  */
 static void updata_user_parameter(void)
 {
-    if (user_temp_para.flash_update)
+    if (user_main_para.flash_update)
     {
         offline_data_type_t old_user_data;
         Flash_read(USER_FLASH_ADDR, (uint8_t *)&old_user_data, sizeof(old_user_data));
@@ -297,11 +304,9 @@ static void updata_user_parameter(void)
             Flash_erase(USER_CONFIG_SECTOR);
             Flash_write(USER_FLASH_ADDR, (uint8_t *)&control_temp_para, sizeof(control_temp_para));
         }
-        user_temp_para.flash_update = 0;
+        user_main_para.flash_update = 0;
     }
 }
-
-
 
 /**
  * @description: 温度控制
@@ -311,7 +316,7 @@ static void const_temp_control(void)
 {
     uint16_t err_diff;
     float I_out;
-    temp_control_para.new_err = control_temp_para.target_temp - user_temp_para.actual_temp; // 误差
+    temp_control_para.new_err = control_temp_para.target_temp - user_main_para.actual_temp; // 误差
     err_diff = temp_control_para.new_err - temp_control_para.last_err;
 
     temp_control_para.err_sum += temp_control_para.new_err; // 偏差之和
@@ -348,29 +353,33 @@ static void const_temp_control(void)
         temp_control_para.pid_out = 0;
 
     // 更新pwm
-    user_temp_para.set_pwm = temp_control_para.pid_out;
+    user_main_para.set_pwm = temp_control_para.pid_out;
     // 温差更新
     temp_control_para.last_err = temp_control_para.new_err;
 }
 
+/**
+ * @description: 主界面刷新和逻辑处理
+ * @return {*}
+ */
 static void ui_main_refresh(void)
 {
     // 刷新目标温度显示
     GUI_ShowNum(3, 53, control_temp_para.target_temp, 3, 12, 0);
 
     // 刷新供电电压显示
-    if (user_temp_para.refresh_voltage)
+    if (user_main_para.refresh_voltage)
     {
         float Voltage = GET_PWR_Value();
         // elog_i(TAG, "pwr:%d", (uint16_t)Voltage);
         if (Voltage < 20)
         {
             // 检测到电压异常
-            user_temp_para.volt_err = 1;
+            user_main_para.volt_err = 1;
         }
         else
         {
-            user_temp_para.volt_err = 0;
+            user_main_para.volt_err = 0;
         }
         uint16_t Voltage_int = (uint16_t)Voltage;
         uint16_t Voltage_float = (uint16_t)((Voltage_int * 10) % 10);
@@ -378,58 +387,63 @@ static void ui_main_refresh(void)
         GUI_ShowChar(110, 0, '.', 12, 1);
         GUI_ShowNum(116, 0, Voltage_float, 1, 12, 1);
         GUI_ShowChar(122, 0, 'V', 12, 1);
-        user_temp_para.refresh_voltage = 0;
+        user_main_para.refresh_voltage = 0;
     }
 
     // 刷新实际温度显示
-    if (!user_temp_para.volt_err)
+    if (!user_main_para.volt_err)
     {
-        if (user_temp_para.refresh_actual_temp)
+        if (user_main_para.refresh_actual_temp)
         {
-            user_temp_para.actual_temp = MAX6675_Read();
-            GUI_ShowNum(0, 12, user_temp_para.actual_temp, 3, 40, 0);
-            user_temp_para.refresh_actual_temp = 0;
+            user_main_para.actual_temp = MAX6675_Read();
+            GUI_ShowNum(0, 12, user_main_para.actual_temp, 3, 40, 0);
+            user_main_para.refresh_actual_temp = 0;
         }
     }
     else
     {
         // 电压异常显示错误
-        if (user_temp_para.refresh_actual_temp)
+        if (user_main_para.refresh_actual_temp)
         {
             GUI_ShowString(0, 12, "ERR", 40, 0);
-            user_temp_para.refresh_actual_temp = 0;
+            user_main_para.refresh_actual_temp = 0;
         }
     }
     // 温度控制pid
     const_temp_control();
     // 刷新pwm 和pwm占比显示
-    if (user_temp_para.volt_err || (!user_temp_para.heating_flag)) // 异常或者加热标记未置起
+    if (user_main_para.volt_err || (!user_main_para.heating_flag)) // 异常或者加热标记未置起
     {
         // 不加热
-        user_temp_para.set_pwm = 0;
+        user_main_para.set_pwm = 0;
     }
     // 上下限处理
-    if (user_temp_para.set_pwm > Temp_pwm_high)
+    if (user_main_para.set_pwm > Temp_pwm_high)
     {
-        user_temp_para.set_pwm = Temp_pwm_high;
+        user_main_para.set_pwm = Temp_pwm_high;
     }
-    else if (user_temp_para.set_pwm < Temp_pwm_low)
+    else if (user_main_para.set_pwm < Temp_pwm_low)
     {
-        user_temp_para.set_pwm = Temp_pwm_low;
+        user_main_para.set_pwm = Temp_pwm_low;
     }
     // 调整pwm
-    ATIM_SetCompare1B(user_temp_para.set_pwm);
-    uint16_t pwm_prop = (user_temp_para.set_pwm * 100) / 999;
+    ATIM_SetCompare1B(user_main_para.set_pwm);
+    uint16_t pwm_prop = (user_main_para.set_pwm * 100) / 999;
     GUI_ShowNum(106, 53, pwm_prop, 3, 12, 0);
     GUI_ShowChar(123, 53, '%', 12, 0);
 
     // 刷新logo显示
-    if (user_temp_para.volt_err)
+    if (user_main_para.volt_err)
     {
         GUI_ShowBMP(65, 27, 24, 24, err_logo, 0);
         GUI_ShowBMP(90, 36, 28, 14, err_text, 0);
     }
-    else if (user_temp_para.set_pwm > Temp_demarcation_line)
+    else if (!user_main_para.heating_flag)
+    {
+        GUI_ShowBMP(65, 27, 24, 24, standby_temp_logo, 0);
+        GUI_ShowBMP(90, 36, 28, 14, standby_temp_text, 0);
+    }
+    else if (user_main_para.set_pwm > Temp_demarcation_line)
     {
         GUI_ShowBMP(65, 27, 24, 24, rise_temp_logo, 0);
         GUI_ShowBMP(90, 36, 28, 14, rise_temp_text, 0);
@@ -441,6 +455,24 @@ static void ui_main_refresh(void)
     }
     // 更新flash中目标温度
     updata_user_parameter();
+}
+
+static void menu_ui_init(void)
+{
+    uint32_t list_len = sizeof(menu_list) / sizeof(menu_list_type_t);
+
+    for(uint32_t i = 0; i<4;i++)
+    {
+        GUI_ShowString(2,i*16,menu_list[i].str,16,1);
+    }
+
+}
+/**
+ * @description: 菜单界面刷新
+ * @return {*}
+ */
+static void menu_ui_refresh(void)
+{
 }
 /**
  * @description: ui 流程
@@ -467,6 +499,7 @@ void UI_Main_Process(void)
         break;
     case PROCESS_MENU_UI:
         /* code */
+        menu_ui_refresh();
         break;
     default:
         break;
@@ -496,7 +529,7 @@ void key_Main_process(void)
         if (key_flag[SINGLE_FLAG])
         {
             // 单点
-            user_temp_para.heating_flag = !user_temp_para.heating_flag;
+            user_main_para.heating_flag = !user_main_para.heating_flag;
             key_flag[SINGLE_FLAG] = 0;
         }
         else if (key_flag[DOUBLE_FLAG])
@@ -508,9 +541,13 @@ void key_Main_process(void)
         {
             // 长按
             key_flag[LONG_FLAG] = 0;
+            OLED_Clear();
+            menu_ui_init();
+            main_ui_process = PROCESS_MENU_UI; // 状态切换
         }
         else if (key_flag[RIGHT_FLAG])
         {
+            // 右转
             control_temp_para.target_temp -= Temp_step;
             if (control_temp_para.target_temp < Temp_lower)
             {
@@ -520,6 +557,7 @@ void key_Main_process(void)
         }
         else if (key_flag[LEFT_FLAG])
         {
+            // 左转
             control_temp_para.target_temp += Temp_step;
             if (control_temp_para.target_temp > Temp_upper)
             {
@@ -529,6 +567,33 @@ void key_Main_process(void)
         }
         break;
     case PROCESS_MENU_UI:
+        if (key_flag[SINGLE_FLAG])
+        {
+            // 单点
+            key_flag[SINGLE_FLAG] = 0;
+        }
+        else if (key_flag[DOUBLE_FLAG])
+        {
+            // 双点
+            key_flag[DOUBLE_FLAG] = 0;
+        }
+        else if (key_flag[LONG_FLAG])
+        {
+            // 长按
+            key_flag[LONG_FLAG] = 0;
+            GUI_ShowBMP(0, 0, OLED_WIDTH, OLED_HEIGHT, main_ui_bg, 0);
+            main_ui_process = PROCESS_MAIN_UI; // 状态切换
+        }
+        else if (key_flag[RIGHT_FLAG])
+        {
+            // 右转
+            key_flag[RIGHT_FLAG] = 0;
+        }
+        else if (key_flag[LEFT_FLAG])
+        {
+            // 左转
+            key_flag[LEFT_FLAG] = 0;
+        }
         break;
     }
 }
