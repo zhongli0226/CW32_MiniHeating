@@ -139,13 +139,13 @@ void EC11_HandlerCallBack(void)
             EC11_2_flag = !blv; // 取反是因为 alv,blv必然异步，一高一低。
             if (EC11_1_flag && EC11_2_flag)
             {
-                set_key_flag(RIGHT_FLAG);
-                // elog_i(TAG, "right on");
+                set_key_flag(LEFT_FLAG);
+                // elog_i(TAG, "left on");
             }
             if (EC11_1_flag == 0 && EC11_2_flag == 0)
             {
-                set_key_flag(LEFT_FLAG);
-                // elog_i(TAG, "left on");
+                set_key_flag(RIGHT_FLAG);
+                // elog_i(TAG, "right on");
             }
             EC11_flag = 0;
         }

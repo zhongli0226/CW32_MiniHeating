@@ -267,17 +267,17 @@ void GUI_LineWith(uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint8_t wi
 
 /**
  * @description:    显示单个英文字符
- * @param {uint8_t} x:      字符显示位置的开始x坐标
- * @param {uint8_t} y:      字符显示位置的开始y坐标
+ * @param {int8_t} x:      字符显示位置的开始x坐标
+ * @param {int8_t} y:      字符显示位置的开始y坐标
  * @param {uint8_t} chr:    显示字符的ASCII码（0〜94）
  * @param {uint8_t} size:   显示字符的大小（12,16）
  * @param {uint8_t} mode:   0：白色背景和黑色字符   1：黑色背景和白色字符
  * @return {*}
  */
-void GUI_ShowChar(uint8_t x, uint8_t y, uint8_t chr, uint8_t size, uint8_t mode)
+void GUI_ShowChar(int8_t x, int8_t y, uint8_t chr, uint8_t size, uint8_t mode)
 {
     uint8_t temp, t, t1;
-    uint8_t y0 = y;
+    int8_t y0 = y;
     chr = chr - ' ';                                                // 得到偏移后的值
     uint8_t csize = (size / 8 + ((size % 8) ? 1 : 0)) * (size / 2); // 得到字体一个字符对应点阵集所占的字节数
     for (t = 0; t < csize; t++)
@@ -302,10 +302,13 @@ void GUI_ShowChar(uint8_t x, uint8_t y, uint8_t chr, uint8_t size, uint8_t mode)
             return;
         for (t1 = 0; t1 < 8; t1++)
         {
-            if (temp & 0x80)
-                GUI_DrawPoint(x, y, mode);
-            else
-                GUI_DrawPoint(x, y, !mode);
+            if (y >= 0)
+            {
+                if (temp & 0x80)
+                    GUI_DrawPoint((uint8_t)x, (uint8_t)y, mode);
+                else
+                    GUI_DrawPoint((uint8_t)x, (uint8_t)y, !mode);
+            }
             temp <<= 1;
             y++;
             if ((y - y0) == size)
@@ -320,30 +323,31 @@ void GUI_ShowChar(uint8_t x, uint8_t y, uint8_t chr, uint8_t size, uint8_t mode)
 
 /**
  * @description:    显示英文字符串
- * @param {uint8_t} x:  英文字符串的x坐标
- * @param {uint8_t} y:  英文字符串的y坐标
+ * @param {int8_t} x:  英文字符串的x坐标
+ * @param {int8_t} y:  英文字符串的y坐标
  * @param {uint8_t} *p: 英文字符串的指针
  * @param {uint8_t} size: 显示字符的大小（8,16）
  * @param {uint8_t} mode:   0：白色背景和黑色字符   1：黑色背景和白色字符
  * @return {*}
  */
-void GUI_ShowString(uint8_t x, uint8_t y, const char *p, uint8_t size, uint8_t mode)
+void GUI_ShowString(int8_t x, int8_t y, const char *p, uint8_t size, uint8_t mode)
 {
     // #define MAX_CHAR_POSX 122
-#define MAX_CHAR_POSX 126
-#define MAX_CHAR_POSY 58
+    // #define MAX_CHAR_POSX 126
+    // #define MAX_CHAR_POSY 58
     while (*p != '\0')
     {
-        if (x > MAX_CHAR_POSX)
-        {
-            x = 0;
-            y += size;
-        }
-        if (y > MAX_CHAR_POSY)
-        {
-            y = x = 0;
-            OLED_Clear();
-        }
+        //* 关闭限制
+        // if (x > MAX_CHAR_POSX)
+        // {
+        //     x = 0;
+        //     y += size;
+        // }
+        // if (y > MAX_CHAR_POSY)
+        // {
+        //     y = x = 0;
+        //     OLED_Clear();
+        // }
         GUI_ShowChar(x, y, *p, size, mode);
         x += size / 2;
         p++;

@@ -55,27 +55,27 @@ void GUI_RLine(uint16_t x0, uint8_t y0, uint8_t y1, uint8_t color);
  */
 void GUI_LineWith(uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint8_t with, uint8_t color);
 
-/** 
+/**
  * @description:    显示单个英文字符
- * @param {uint8_t} x:      字符显示位置的开始x坐标
- * @param {uint8_t} y:      字符显示位置的开始y坐标
+ * @param {int8_t} x:      字符显示位置的开始x坐标
+ * @param {int8_t} y:      字符显示位置的开始y坐标
  * @param {uint8_t} chr:    显示字符的ASCII码（0〜94）
- * @param {uint8_t} size:   显示字符的大小（8,16）
+ * @param {uint8_t} size:   显示字符的大小（12,16）
  * @param {uint8_t} mode:   0：白色背景和黑色字符   1：黑色背景和白色字符
  * @return {*}
  */
-void GUI_ShowChar(uint8_t x, uint8_t y, uint8_t chr, uint8_t size, uint8_t mode);
+void GUI_ShowChar(int8_t x, int8_t y, uint8_t chr, uint8_t size, uint8_t mode);
 
 /**
  * @description:    显示英文字符串
- * @param {uint8_t} x:  英文字符串的x坐标
- * @param {uint8_t} y:  英文字符串的y坐标
+ * @param {int8_t} x:  英文字符串的x坐标
+ * @param {int8_t} y:  英文字符串的y坐标
  * @param {uint8_t} *p: 英文字符串的指针
  * @param {uint8_t} size: 显示字符的大小（8,16）
  * @param {uint8_t} mode:   0：白色背景和黑色字符   1：黑色背景和白色字符
  * @return {*}
  */
-void GUI_ShowString(uint8_t x, uint8_t y, const char *p, uint8_t size, uint8_t mode);
+void GUI_ShowString(int8_t x, int8_t y, const char *p, uint8_t size, uint8_t mode);
 
 /**
  * @description: oled 显示数字

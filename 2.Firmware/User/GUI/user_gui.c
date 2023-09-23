@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-20 23:49:09
+ * @LastEditTime: 2023-09-23 11:53:20
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -43,6 +43,7 @@
 #define Default_SET_PID_I 0  // 默认设定 I
 #define Default_SET_PID_D 0  // 默认设定 D
 
+#define MENU_FONT_NUM 16 // 菜单字体大小
 typedef enum
 {
     PROCESS_INIT_UI = 0,
@@ -71,8 +72,12 @@ typedef struct
 // 菜单界面显示相关参数
 typedef struct
 {
-    uint8_t x_now;// 当前x位置
-    uint8_t x_tag;// 目标x位置
+    int8_t list_x_now;       // 当前x位置
+    int8_t list_x_tag;       // 目标x位置
+    int8_t list_y_now;       // 当前y位置
+    int8_t list_y_tag;       // 目标y位置
+    int8_t list_top_line;    // 记录界面头部位置
+    int8_t list_bottom_line; // 记录界面底部位置
 } user_menu_ui_type_t;
 
 // 温度控制参数
@@ -115,7 +120,7 @@ static pid_temp_type_t temp_control_para = {0}; // 温度pid计算中间量
 
 static uint8_t key_flag[NUM_FLAG_T] = {0}; // 按键事件flag
 
-static menu_list_type_t menu_list[] = {
+static const menu_list_type_t menu_list[] = {
     {"SET PID", 8},
     {"Version", 8},
     {"To be add", 10},
@@ -123,7 +128,9 @@ static menu_list_type_t menu_list[] = {
     {"To be add", 10},
 };
 
-static user_menu_ui_type_t user_menu_para = {0}; // 用户菜单界面参数
+static const uint32_t menu_list_len = sizeof(menu_list) / sizeof(menu_list_type_t); // 菜单列表长度
+
+static user_menu_ui_type_t user_menu_para = {0, 0, 0, 0, 0, OLED_HEIGHT / MENU_FONT_NUM}; // 用户菜单界面参数
 
 /**
  * @description: 设置key外部事件标志flag
@@ -457,23 +464,33 @@ static void ui_main_refresh(void)
     updata_user_parameter();
 }
 
-static void menu_ui_init(void)
-{
-    uint32_t list_len = sizeof(menu_list) / sizeof(menu_list_type_t);
 
-    for(uint32_t i = 0; i<4;i++)
-    {
-        GUI_ShowString(2,i*16,menu_list[i].str,16,1);
-    }
-
-}
+// todo
 /**
  * @description: 菜单界面刷新
  * @return {*}
  */
 static void menu_ui_refresh(void)
 {
+    OLED_Clear();
+
+    for (uint32_t i = 0; i < menu_list_len; i++)
+    {
+        // if ((user_menu_para.list_y_now + i * MENU_FONT_NUM) >= 0)
+        GUI_ShowString(user_menu_para.list_x_now, user_menu_para.list_y_now + i * MENU_FONT_NUM, menu_list[i].str, MENU_FONT_NUM, 1);
+    }
+
+    // 菜单滑动
+    if (user_menu_para.list_y_now < user_menu_para.list_y_tag)
+    {
+        user_menu_para.list_y_now += 1;
+    }
+    else if (user_menu_para.list_y_now > user_menu_para.list_y_tag)
+    {
+        user_menu_para.list_y_now -= 1;
+    }
 }
+
 /**
  * @description: ui 流程
  * @return {*}
@@ -542,26 +559,26 @@ void key_Main_process(void)
             // 长按
             key_flag[LONG_FLAG] = 0;
             OLED_Clear();
-            menu_ui_init();
             main_ui_process = PROCESS_MENU_UI; // 状态切换
         }
         else if (key_flag[RIGHT_FLAG])
         {
             // 右转
-            control_temp_para.target_temp -= Temp_step;
-            if (control_temp_para.target_temp < Temp_lower)
+            control_temp_para.target_temp += Temp_step;
+            if (control_temp_para.target_temp > Temp_upper)
             {
-                control_temp_para.target_temp = Temp_lower;
+                control_temp_para.target_temp = Temp_upper;
             }
+
             key_flag[RIGHT_FLAG] = 0;
         }
         else if (key_flag[LEFT_FLAG])
         {
             // 左转
-            control_temp_para.target_temp += Temp_step;
-            if (control_temp_para.target_temp > Temp_upper)
+            control_temp_para.target_temp -= Temp_step;
+            if (control_temp_para.target_temp < Temp_lower)
             {
-                control_temp_para.target_temp = Temp_upper;
+                control_temp_para.target_temp = Temp_lower;
             }
             key_flag[LEFT_FLAG] = 0;
         }
@@ -587,11 +604,38 @@ void key_Main_process(void)
         else if (key_flag[RIGHT_FLAG])
         {
             // 右转
+            // 菜单滑动
+            user_menu_para.list_top_line += 1;
+            user_menu_para.list_bottom_line += 1;
+            // 菜单滑动限制
+            if (user_menu_para.list_bottom_line > menu_list_len)
+            {
+                user_menu_para.list_bottom_line = menu_list_len;
+                user_menu_para.list_top_line = menu_list_len - (OLED_HEIGHT / MENU_FONT_NUM);
+            }
+            else
+            {
+                user_menu_para.list_y_tag -= MENU_FONT_NUM;
+            }
+
             key_flag[RIGHT_FLAG] = 0;
         }
         else if (key_flag[LEFT_FLAG])
         {
             // 左转
+            // 菜单滑动
+            user_menu_para.list_top_line -= 1;
+            user_menu_para.list_bottom_line -= 1;
+            // 菜单滑动限制
+            if (user_menu_para.list_top_line < 0)
+            {
+                user_menu_para.list_top_line = 0;
+                user_menu_para.list_bottom_line = OLED_HEIGHT / MENU_FONT_NUM;
+            }
+            else
+            {
+                user_menu_para.list_y_tag += MENU_FONT_NUM;
+            }
             key_flag[LEFT_FLAG] = 0;
         }
         break;
