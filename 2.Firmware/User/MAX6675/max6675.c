@@ -1,13 +1,13 @@
 /*
- * @Description: 
- * @Version: 
+ * @Description:
+ * @Version:
  * @Autor: tangwc
  * @Date: 2023-08-12 21:44:00
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-03 00:51:16
+ * @LastEditTime: 2023-09-24 15:38:49
  * @FilePath: \2.Firmware\User\MAX6675\max6675.c
- * 
- *  Copyright (c) 2023 by tangwc, All Rights Reserved. 
+ *
+ *  Copyright (c) 2023 by tangwc, All Rights Reserved.
  */
 #include <string.h>
 
@@ -62,41 +62,65 @@ void MAX6675_Init(void)
 }
 
 /**
- * @description: 读取max6675的温度
- * @return {*} 整数部分温度
+ * @description: 读取max6675 寄存器
+ * @return {*}
  */
-uint16_t MAX6675_Read(void)
+static uint16_t MAX6675_ReadReg(void)
+{
+    uint8_t i = 0;
+    uint16_t dat = 0;
+
+    MAX6675_CS_CLR(); // 置低，使能MAX6675
+    MAX6675_CLK_CLR();
+
+    for (i = 0; i < 16; i++)
+    {
+        MAX6675_CLK_SET();
+
+        dat = dat << 1;
+        if (MAX6675_MISO_GET() == GPIO_Pin_SET)
+            dat = dat | 0x0001;
+        MAX6675_CLK_CLR();
+    }
+    MAX6675_CS_SET(); // 关闭MAX6675
+
+    return dat;
+}
+
+
+/**
+ * @description: 读取max6675的温度
+ * @param {uint16_t} *temp 整数部分温度
+ * @return {*} 连接状态
+ */
+uint16_t MAX6675_Read(uint16_t *temp)
 {
     uint16_t value = 0;
     uint16_t value_dec = 0;
-    MAX6675_CS_SET(); // 关闭MAX6675
-    FirmwareDelay(10);
-    MAX6675_CS_CLR(); // 置低，使能MAX6675
-    FirmwareDelay(10);
-    MAX6675_CLK_SET();
-    for (uint32_t i = 16; i > 0; i--) // 获取16位MSB
+    uint8_t connet_flag = 0;
+    value = MAX6675_ReadReg(); // 读取寄存器
+
+    // 读出数据的D2位是热电偶掉线标志位，该位为1表示掉线，该位为0表示连接
+    connet_flag = value & 0x04;
+    connet_flag = connet_flag >> 2;
+
+    if (connet_flag)
     {
-        FirmwareDelay(10);
-        MAX6675_CLK_CLR();
-        value = value << 1; // 左移
-        if (MAX6675_MISO_GET() == GPIO_Pin_SET)
-        {
-            value |= 0x0001;
-        }
-        else
-        {
-            value &= 0xffff;
-        }
-        MAX6675_CLK_SET();
+        elog_w(TAG, "max6675 is not connect");
+        return 1;
     }
-    MAX6675_CS_SET();   // 关闭MAX6675
-    value = value << 1; // 去掉第15位
-    value = value >> 4; // 去掉第0~2位
-    value_dec = value * 10;
-    value = value / 4;         // MAX6675最大数值为1023.75，而AD精度为12位，即2的12次方为4096，转换对应数，故要除4；
-    value_dec = value_dec / 4; // 小数 与上述同理
-    if (value >= 1024)
-        value = 1024;
+    else
+    {
+        value = value << 1; // 去掉第15位
+        value = value >> 4; // 去掉第0~2位
+        value_dec = value * 10;
+        value = value / 4;         // MAX6675最大数值为1023.75，而AD精度为12位，即2的12次方为4096，转换对应数，故要除4；
+        value_dec = value_dec / 4; // 小数 与上述同理
+        if (value >= 1024)
+            value = 1024;
+    }
+
+    *temp = value;
     // elog_i(TAG, "tempvalue:%d.%d", value, value_dec);
-    return value;
+    return 0;
 }

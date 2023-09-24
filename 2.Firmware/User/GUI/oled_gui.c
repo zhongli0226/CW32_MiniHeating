@@ -295,6 +295,8 @@ void GUI_ShowChar(int8_t x, int8_t y, uint8_t chr, uint8_t size, uint8_t mode)
                 temp = oled_asc2_4020[10][t]; // 调用4020字体
             else if ((chr + ' ') == 'R')
                 temp = oled_asc2_4020[11][t]; // 调用4020字体
+            else if ((chr + ' ') == ' ')
+                temp = 0x00;
             else
                 return;
         }

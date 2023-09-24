@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-23 11:53:20
+ * @LastEditTime: 2023-09-24 15:57:09
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -57,10 +57,11 @@ typedef struct
     uint8_t refresh_actual_temp; // 刷新实际温度
     uint8_t refresh_voltage;     // 刷新电源电压
     uint16_t actual_temp;        // 实际温度
-    uint8_t volt_err;            // 电源电压错误
-    uint8_t flash_update;        // FLASH刷新
+    uint8_t volt_err;            // 电压异常状态错误
+    uint8_t max6675_err;         // max6675错误
     int16_t set_pwm;             // 设置的pwm
     uint8_t heating_flag;        // 加热标志
+    uint8_t flash_update;        // FLASH刷新
 } user_main_ui_type_t;
 
 typedef struct
@@ -398,28 +399,33 @@ static void ui_main_refresh(void)
     }
 
     // 刷新实际温度显示
-    if (!user_main_para.volt_err)
+    if (user_main_para.refresh_actual_temp)
     {
-        if (user_main_para.refresh_actual_temp)
+        if (MAX6675_Read(&user_main_para.actual_temp))
         {
-            user_main_para.actual_temp = MAX6675_Read();
-            GUI_ShowNum(0, 12, user_main_para.actual_temp, 3, 40, 0);
-            user_main_para.refresh_actual_temp = 0;
-        }
-    }
-    else
-    {
-        // 电压异常显示错误
-        if (user_main_para.refresh_actual_temp)
-        {
+            // max6675异常
+            user_main_para.max6675_err = 1;
             GUI_ShowString(0, 12, "ERR", 40, 0);
-            user_main_para.refresh_actual_temp = 0;
         }
+        else
+        {
+            user_main_para.max6675_err = 0;
+            if (!user_main_para.volt_err)
+            {
+                GUI_ShowNum(0, 12, user_main_para.actual_temp, 3, 40, 0);
+            }
+            else
+            {
+                GUI_ShowString(0, 12, "ERR", 40, 0);
+            }
+        }
+        user_main_para.refresh_actual_temp = 0;
     }
+
     // 温度控制pid
     const_temp_control();
     // 刷新pwm 和pwm占比显示
-    if (user_main_para.volt_err || (!user_main_para.heating_flag)) // 异常或者加热标记未置起
+    if ((user_main_para.volt_err || user_main_para.max6675_err) || (!user_main_para.heating_flag)) // 异常或者加热标记未置起
     {
         // 不加热
         user_main_para.set_pwm = 0;
@@ -440,7 +446,7 @@ static void ui_main_refresh(void)
     GUI_ShowChar(123, 53, '%', 12, 0);
 
     // 刷新logo显示
-    if (user_main_para.volt_err)
+    if ((user_main_para.volt_err || user_main_para.max6675_err))
     {
         GUI_ShowBMP(65, 27, 24, 24, err_logo, 0);
         GUI_ShowBMP(90, 36, 28, 14, err_text, 0);
@@ -463,7 +469,6 @@ static void ui_main_refresh(void)
     // 更新flash中目标温度
     updata_user_parameter();
 }
-
 
 // todo
 /**
