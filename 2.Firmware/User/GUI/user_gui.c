@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-09-24 15:57:09
+ * @LastEditTime: 2023-10-02 12:07:40
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -79,6 +79,8 @@ typedef struct
     int8_t list_y_tag;       // 目标y位置
     int8_t list_top_line;    // 记录界面头部位置
     int8_t list_bottom_line; // 记录界面底部位置
+    int8_t frame_list_index; // 记录选择第几个菜单
+    int8_t frame_list_line;  // 记录当前页面的位置 // 最大为 (OLED_HEIGHT / MENU_FONT_NUM-1)
 } user_menu_ui_type_t;
 
 // 温度控制参数
@@ -131,7 +133,7 @@ static const menu_list_type_t menu_list[] = {
 
 static const uint32_t menu_list_len = sizeof(menu_list) / sizeof(menu_list_type_t); // 菜单列表长度
 
-static user_menu_ui_type_t user_menu_para = {0, 0, 0, 0, 0, OLED_HEIGHT / MENU_FONT_NUM}; // 用户菜单界面参数
+static user_menu_ui_type_t user_menu_para = {0, 0, 0, 0, 0, OLED_HEIGHT / MENU_FONT_NUM, 0, 0}; // 用户菜单界面参数
 
 /**
  * @description: 设置key外部事件标志flag
@@ -482,7 +484,15 @@ static void menu_ui_refresh(void)
     for (uint32_t i = 0; i < menu_list_len; i++)
     {
         // if ((user_menu_para.list_y_now + i * MENU_FONT_NUM) >= 0)
-        GUI_ShowString(user_menu_para.list_x_now, user_menu_para.list_y_now + i * MENU_FONT_NUM, menu_list[i].str, MENU_FONT_NUM, 1);
+        if(user_menu_para.frame_list_index == i)
+        {
+            GUI_ShowString(user_menu_para.list_x_now, user_menu_para.list_y_now + i * MENU_FONT_NUM, menu_list[i].str, MENU_FONT_NUM, 0);
+        }
+        else
+        {
+            GUI_ShowString(user_menu_para.list_x_now, user_menu_para.list_y_now + i * MENU_FONT_NUM, menu_list[i].str, MENU_FONT_NUM, 1);
+        }
+        
     }
 
     // 菜单滑动
@@ -610,17 +620,28 @@ void key_Main_process(void)
         {
             // 右转
             // 菜单滑动
-            user_menu_para.list_top_line += 1;
-            user_menu_para.list_bottom_line += 1;
-            // 菜单滑动限制
-            if (user_menu_para.list_bottom_line > menu_list_len)
+            user_menu_para.frame_list_index += 1;
+            user_menu_para.frame_list_line += 1;
+            if (user_menu_para.frame_list_line > (OLED_HEIGHT / MENU_FONT_NUM - 1))
             {
-                user_menu_para.list_bottom_line = menu_list_len;
-                user_menu_para.list_top_line = menu_list_len - (OLED_HEIGHT / MENU_FONT_NUM);
-            }
-            else
-            {
-                user_menu_para.list_y_tag -= MENU_FONT_NUM;
+                user_menu_para.frame_list_line = (OLED_HEIGHT / MENU_FONT_NUM - 1);
+
+                user_menu_para.list_top_line += 1;
+                user_menu_para.list_bottom_line += 1;
+                // 菜单滑动限制
+                if (user_menu_para.list_bottom_line > menu_list_len)
+                {
+                    user_menu_para.list_bottom_line = menu_list_len;
+                    user_menu_para.list_top_line = menu_list_len - (OLED_HEIGHT / MENU_FONT_NUM);
+                }
+                else
+                {
+                    user_menu_para.list_y_tag -= MENU_FONT_NUM;
+                }
+                if (user_menu_para.frame_list_index > menu_list_len - 1)
+                {
+                    user_menu_para.frame_list_index = menu_list_len - 1;
+                }
             }
 
             key_flag[RIGHT_FLAG] = 0;
@@ -629,18 +650,31 @@ void key_Main_process(void)
         {
             // 左转
             // 菜单滑动
-            user_menu_para.list_top_line -= 1;
-            user_menu_para.list_bottom_line -= 1;
-            // 菜单滑动限制
-            if (user_menu_para.list_top_line < 0)
+            user_menu_para.frame_list_index -= 1;
+            user_menu_para.frame_list_line -= 1;
+            if (user_menu_para.frame_list_line < 0)
             {
-                user_menu_para.list_top_line = 0;
-                user_menu_para.list_bottom_line = OLED_HEIGHT / MENU_FONT_NUM;
+                user_menu_para.frame_list_line = 0;
+
+                user_menu_para.list_top_line -= 1;
+                user_menu_para.list_bottom_line -= 1;
+                // 菜单滑动限制
+                if (user_menu_para.list_top_line < 0)
+                {
+                    user_menu_para.list_top_line = 0;
+                    user_menu_para.list_bottom_line = OLED_HEIGHT / MENU_FONT_NUM;
+                }
+                else
+                {
+                    user_menu_para.list_y_tag += MENU_FONT_NUM;
+                }
+
+                if (user_menu_para.frame_list_index < 0)
+                {
+                    user_menu_para.frame_list_index = 0;
+                }
             }
-            else
-            {
-                user_menu_para.list_y_tag += MENU_FONT_NUM;
-            }
+
             key_flag[LEFT_FLAG] = 0;
         }
         break;
