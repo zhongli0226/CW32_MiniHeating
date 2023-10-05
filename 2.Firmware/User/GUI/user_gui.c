@@ -4,7 +4,7 @@
  * @Autor: tangwc
  * @Date: 2023-08-12 15:21:09
  * @LastEditors: tangwc
- * @LastEditTime: 2023-10-02 12:07:40
+ * @LastEditTime: 2023-10-05 09:29:54
  * @FilePath: \2.Firmware\User\GUI\user_gui.c
  *
  *  Copyright (c) 2023 by tangwc, All Rights Reserved.
@@ -51,6 +51,14 @@ typedef enum
     PROCESS_MENU_UI,
 } ui_process_type_t;
 
+typedef enum
+{
+    CONFIG_PID_MENU = 0,
+    SHOW_VERSION_MENU,
+    MENU_1,
+    MENU_2,
+    MENU_3,
+} menu_mode_type_t;
 // 主界面显示相关参数
 typedef struct
 {
@@ -66,6 +74,7 @@ typedef struct
 
 typedef struct
 {
+    menu_mode_type_t menu_mode;
     char *str;
     uint8_t len;
 } menu_list_type_t;
@@ -124,11 +133,11 @@ static pid_temp_type_t temp_control_para = {0}; // 温度pid计算中间量
 static uint8_t key_flag[NUM_FLAG_T] = {0}; // 按键事件flag
 
 static const menu_list_type_t menu_list[] = {
-    {"SET PID", 8},
-    {"Version", 8},
-    {"To be add", 10},
-    {"To be add", 10},
-    {"To be add", 10},
+    {CONFIG_PID_MENU, "SET PID", 8},
+    {SHOW_VERSION_MENU, "Version", 8},
+    {MENU_1, "To be add", 10},
+    {MENU_2, "To be add", 10},
+    {MENU_3, "To be add", 10},
 };
 
 static const uint32_t menu_list_len = sizeof(menu_list) / sizeof(menu_list_type_t); // 菜单列表长度
@@ -484,7 +493,7 @@ static void menu_ui_refresh(void)
     for (uint32_t i = 0; i < menu_list_len; i++)
     {
         // if ((user_menu_para.list_y_now + i * MENU_FONT_NUM) >= 0)
-        if(user_menu_para.frame_list_index == i)
+        if (user_menu_para.frame_list_index == i)
         {
             GUI_ShowString(user_menu_para.list_x_now, user_menu_para.list_y_now + i * MENU_FONT_NUM, menu_list[i].str, MENU_FONT_NUM, 0);
         }
@@ -492,7 +501,6 @@ static void menu_ui_refresh(void)
         {
             GUI_ShowString(user_menu_para.list_x_now, user_menu_para.list_y_now + i * MENU_FONT_NUM, menu_list[i].str, MENU_FONT_NUM, 1);
         }
-        
     }
 
     // 菜单滑动
