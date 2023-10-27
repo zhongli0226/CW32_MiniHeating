@@ -538,7 +538,7 @@ void UI_Main_Process(void)
         ui_main_refresh();
         break;
     case PROCESS_MENU_UI:
-        /* code */
+        /* 菜单界面流程 */
         menu_ui_refresh();
         break;
     default:
