@@ -71,7 +71,7 @@ void ATIMER_init(void)
     ATIM_OCInitStruct.OCInterruptSelect = ATIM_OC_IT_UP_COUNTER;    // 向上中断触发使能
     ATIM_OCInitStruct.OCInterruptState = ENABLE;
     ATIM_OCInitStruct.OCMode = ATIM_OCMODE_PWM1;                // pwm1模式
-    ATIM_OCInitStruct.OCPolarity = ATIM_OCPOLARITY_NONINVERT;   // 正向极性
+    ATIM_OCInitStruct.OCPolarity = ATIM_OCPOLARITY_INVERT;   // 正向极性
     ATIM_OC1BInit(&ATIM_OCInitStruct);
 
     ATIM_ITConfig(ATIM_CR_IT_OVE, ENABLE);
