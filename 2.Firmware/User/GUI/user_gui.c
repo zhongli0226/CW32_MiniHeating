@@ -529,7 +529,7 @@ void UI_Main_Process(void)
         if (ret)
         {
             user_parameter_init(); // 读取flash中数据
-            GUI_ShowBMP(0, 0, OLED_WIDTH, OLED_HEIGHT, main_ui_bg, 0);
+            GUI_ComeBMP(0, 0, OLED_WIDTH, OLED_HEIGHT, main_ui_bg, 0);
             main_ui_process = PROCESS_MAIN_UI;
         }
         break;

@@ -1,11 +1,14 @@
 #include <string.h>
 #include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "oled.h"
 #include "oled_gui.h"
 #include "basics_font.h"
 
 #include "elog.h"
+#include "system_cw32f030.h"
 
 #define TAG "OLED_GUI"
 
@@ -443,4 +446,94 @@ void GUI_ShowBMP(uint8_t x, uint8_t y, uint8_t px, uint8_t py, const uint8_t *bg
             }
         }
     }
+}
+
+/**
+ * @brief             图片渐变消失
+ * @param[in]         x 图片的起始x坐标
+ * @param[in]         y 图片的起始y坐标
+ * @param[in]         px 图片的x长度
+ * @param[in]         py 图片的y长度
+ * @param[in]         bg 图片buff地址
+ * @param[in]         mode 0：白色背景和黑色字符   1：黑色背景和白色字符
+ * @retval            0 : 完成渐变效果
+ * @retval            1 : 图片大小超出
+ */
+uint32_t GUI_DisapperBMP(uint8_t x, uint8_t y, uint8_t px, uint8_t py, const uint8_t *bg, uint8_t mode)
+{
+    uint32_t len;
+
+    if ((x + px > OLED_WIDTH) || (y + py > OLED_HEIGHT))
+    {
+        elog_w(TAG, "bmp over .....");
+        return 1;
+    }
+    len = (uint32_t)(ceil((float)px / 2) * ceil((float)py / 4));
+
+    int32_t disapper_temp = 0;
+    while (disapper_temp <= 8)
+    {
+        OLED_Clear();                        // 清除内部缓冲区
+        GUI_ShowBMP(x, y, px, py, bg, mode); // 第一段输出位置
+
+        uint8_t *p = Get_OLEDBuffer();
+        for (uint32_t i = 0; i < len; i++)
+        {
+            p[i] = p[i] & (rand() % 0xff) >> disapper_temp; // rand()%0xff = 0 ~ 0xff
+        }
+
+        disapper_temp += 2;
+
+        OLED_Display();
+        delay1ms(100);
+    }
+    OLED_Display();
+    // delay1ms(1000);
+    return 0;
+}
+
+/**
+ * @brief             图片渐变显示
+ * @param[in]         x 图片的起始x坐标
+ * @param[in]         y 图片的起始y坐标
+ * @param[in]         px 图片的x长度
+ * @param[in]         py 图片的y长度
+ * @param[in]         bg 图片buff地址
+ * @param[in]         mode 0：白色背景和黑色字符   1：黑色背景和白色字符
+ * @retval            0 : 完成渐变效果
+ * @retval            1 : 图片大小超出
+ */
+uint32_t GUI_ComeBMP(uint8_t x, uint8_t y, uint8_t px, uint8_t py, const uint8_t *bg, uint8_t mode)
+{
+    uint32_t len;
+
+    if ((x + px > OLED_WIDTH) || (y + py > OLED_HEIGHT))
+    {
+        elog_w(TAG, "bmp over .....");
+        return 2;
+    }
+    len = (uint32_t)(ceil((float)px / 2) * ceil((float)py / 4));
+
+    int32_t come_temp = 8;
+    while (come_temp >= 0)
+    {
+        OLED_Clear();                        // 清除内部缓冲区
+        GUI_ShowBMP(x, y, px, py, bg, mode); // 第一段输出位置
+        uint8_t *p = Get_OLEDBuffer();
+
+        for (uint32_t i = 0; i < len; i++)
+        {
+            p[i] = p[i] & (rand() % 0xff) >> come_temp; // rand()%0xff = 0 ~ 0xff
+        }
+
+        come_temp -= 2;
+
+        OLED_Display();
+        delay1ms(100);
+    }
+
+    GUI_ShowBMP(x, y, px, py, bg, mode);
+    OLED_Display();
+    // delay1ms(1000);
+    return 0;
 }

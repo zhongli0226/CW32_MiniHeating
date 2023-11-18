@@ -32,6 +32,7 @@
         "btimer.h": "c",
         "cw32f030_flash.h": "c",
         "cw32f030.h": "c",
-        "flash.h": "c"
+        "flash.h": "c",
+        "stdlib.h": "c"
     }
 }

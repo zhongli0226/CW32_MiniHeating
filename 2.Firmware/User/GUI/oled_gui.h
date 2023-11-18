@@ -102,4 +102,30 @@ void GUI_ShowNum(uint8_t x, uint8_t y, uint32_t num, uint8_t len, uint8_t size, 
  */
 void GUI_ShowBMP(uint8_t x, uint8_t y, uint8_t px, uint8_t py, const uint8_t *bg, uint8_t mode);
 
+/**
+ * @brief             图片渐变消失
+ * @param[in]         x 图片的起始x坐标
+ * @param[in]         y 图片的起始y坐标
+ * @param[in]         px 图片的x长度
+ * @param[in]         py 图片的y长度
+ * @param[in]         bg 图片buff地址
+ * @param[in]         mode 0：白色背景和黑色字符   1：黑色背景和白色字符
+ * @retval            0 : 完成渐变效果
+ * @retval            1 : 图片大小超出
+ */
+uint32_t GUI_DisapperBMP(uint8_t x, uint8_t y, uint8_t px, uint8_t py, const uint8_t *bg, uint8_t mode);
+
+/**
+ * @brief             图片渐变显示
+ * @param[in]         x 图片的起始x坐标
+ * @param[in]         y 图片的起始y坐标
+ * @param[in]         px 图片的x长度
+ * @param[in]         py 图片的y长度
+ * @param[in]         bg 图片buff地址
+ * @param[in]         mode 0：白色背景和黑色字符   1：黑色背景和白色字符
+ * @retval            0 : 完成渐变效果
+ * @retval            1 : 图片大小超出
+ */
+uint32_t GUI_ComeBMP(uint8_t x, uint8_t y, uint8_t px, uint8_t py, const uint8_t *bg, uint8_t mode);
+
 #endif
